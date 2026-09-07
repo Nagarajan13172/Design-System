@@ -1,0 +1,99 @@
+Every typeahead you have ever written contains this bug. Most of them still do, because
+it never throws, never logs, and never shows up in an error budget.
+
+## The shape of the failure
+
+A user types into a search box. Each pause dispatches a request. The requests go out in
+order — there is no ambiguity about that, the client controls it. What the client does
+not control is when the responses come back.
+
+Request 3 goes out. Request 4 goes out 340ms later. Request 4 comes back in 90ms.
+Request 3, which happened to hit a cold cache on a shard under load, comes back in
+700ms. The client renders every response as it arrives, so the screen shows results for
+request 4, and then — 270ms later — quietly replaces them with results for request 3.
+
+The user is now looking at suggestions for a query they finished typing a second ago.
+The input says one thing; the list below it says another. Every request returned 200.
+Nothing was retried. No exception was raised. There is no signal anywhere in your
+observability stack that this happened, because from the network's point of view
+everything went perfectly.
+
+This is the defining property of the bug and the reason it survives in production for
+years: **it is a correctness failure with no error condition.** Your error tracker
+cannot see it. Your latency dashboards look healthy — in fact the session that produces
+it contains one unusually *fast* response, which is what lets the slow one land last.
+
+## Why debouncing feels like the fix, and isn't
+
+The instinct is to reach for a debounce, and the instinct is half right. A debounce does
+reduce the damage: it cuts the number of in-flight requests, and it widens the gap
+between the ones that do go out. Widening that gap is what matters, because a race
+survives only when one response's latency exceeds the gap between two dispatches *plus*
+the next response's latency.
+
+Run the numbers rather than trusting the intuition. With response latency at median
+120ms and p95 480ms — a healthy API on decent wifi — moving from no debounce to a 300ms
+debounce takes the fraction of sessions ending on stale data from about 22% down to
+about 1%. That looks like a fix. On a laptop, on an office network, with a warm cache,
+it is indistinguishable from a fix.
+
+Now change one thing. Leave the code alone, leave the debounce at 300ms, and put the
+user on a train: p95 latency 1500ms instead of 480ms. The stale rate goes to roughly
+13%. Same debounce, same code, an order of magnitude more wrong renders.
+
+That is the trap. The race window is not an absolute quantity you can shrink below some
+safe constant — it is a *ratio* between your dispatch spacing and your latency tail, and
+you control only one of those two numbers. You tested on the half of the ratio you
+control. Your users live on the other half.
+
+You can, of course, keep raising the debounce. At 800ms the stale rate does reach zero.
+It reaches zero because the debounce now exceeds essentially every inter-keystroke pause,
+so the session collapses to a single request — which is to say, you have fixed the race
+by removing the feature. A search box that waits most of a second before reacting is one
+users describe as broken.
+
+## Two guards that actually work, and what each one costs
+
+**Sequencing.** Keep a monotonically increasing request id. Stamp each request with it,
+and when a response arrives, compare its stamp against the newest one issued. If it is
+not the newest, drop it on the floor and render nothing.
+
+This eliminates stale final renders completely — zero, at every latency profile we
+measured, not "almost zero" — and it does so without cancelling anything. Every request
+still goes out and still comes back; you simply stop letting superseded ones touch the
+screen. It is about four lines of code and it has no failure mode of its own, which is
+why it should be your default rather than your fallback.
+
+**Cancellation.** `AbortController` lets you abort the previous request when you
+dispatch the next. This also fixes the rendering problem, and it additionally saves
+bandwidth and server work — real wins on mobile.
+
+But it is important to be precise about what abort actually does, because the name
+oversells it. Aborting severs *the client's interest in the response*. It does not reach
+across the network and stop the server. A request you aborted may already have arrived,
+already been processed, and already had effects. For an idempotent GET that distinction
+costs you nothing. For anything with a side effect it is the difference between a
+cancelled operation and an operation you have simply stopped watching — which is how a
+"cancel" button ends up double-charging someone.
+
+So the two are not substitutes, and the trade-off is worth stating out loud in an
+interview: **sequencing fixes what is rendered; cancellation fixes what is spent.** They
+solve different problems and most real clients want both — sequencing because it is the
+correctness guarantee, cancellation because it is the efficiency one.
+
+## What to say when you are asked
+
+Interviewers ask about the typeahead because it is the smallest problem that contains a
+genuine concurrency question, and they are listening for three things.
+
+First, whether you distinguish arrival order from dispatch order at all, or whether you
+reach straight for a library. Second, whether you can name what the failure looks like
+to the user — no error, no log, silent wrongness — because that is what makes it
+dangerous and it is what separates someone who has debugged this from someone who has
+read about it. Third, whether you quantify. "I'd add a debounce" is a weak answer.
+"I'd sequence, because a debounce only narrows the window and the window is a ratio to
+the latency tail I don't control — on a slow network the same debounce is ten times
+worse" is the answer that ends the topic.
+
+And when they push — and they will — the follow-up is almost always about cancellation.
+Have the distinction ready.

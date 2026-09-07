@@ -1,0 +1,14 @@
+[
+  {
+    "name": "landing (/review) — the app's home",
+    "path": "dist/assets/index-*.js",
+    "limit": "95 kB",
+    "gzip": true
+  },
+  {
+    "name": "per-module incremental — sim + claims + items + body + primitive",
+    "path": ["dist/assets/sim-*.js", "dist/assets/claims-*.js", "dist/assets/items-*.js", "dist/assets/body-*.js", "dist/assets/StateMatrix-*.js"],
+    "limit": "60 kB",
+    "gzip": true
+  }
+]

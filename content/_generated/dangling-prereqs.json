@@ -1,0 +1,227 @@
+{
+ "cs-canvas": [
+  "cs-autocomplete",
+  "cs-chat",
+  "cs-dashboard",
+  "cs-feed",
+  "cs-pdp-checkout",
+  "cs-rte",
+  "cs-uploader",
+  "cs-widget"
+ ],
+ "cs-ledger": [
+  "cs-autocomplete",
+  "cs-chat",
+  "cs-dashboard",
+  "cs-feed",
+  "cs-pdp-checkout",
+  "cs-rte",
+  "cs-uploader",
+  "cs-widget"
+ ],
+ "cs-requirements": [
+  "cs-autocomplete",
+  "cs-chat",
+  "cs-dashboard",
+  "cs-feed",
+  "cs-pdp-checkout",
+  "cs-uploader",
+  "cs-widget"
+ ],
+ "sec-origin-model": [
+  "sec-cookies-csrf",
+  "sec-embedding-isolation",
+  "sec-xss-sinks"
+ ],
+ "perf-core-web-vitals": [
+  "cs-feed",
+  "cs-pdp-checkout",
+  "cs-video"
+ ],
+ "api-idempotency": [
+  "cs-chat",
+  "cs-pdp-checkout",
+  "cs-uploader"
+ ],
+ "state-offline-queue": [
+  "cs-chat",
+  "cs-email",
+  "cs-uploader"
+ ],
+ "incl-focus-management": [
+  "cs-email",
+  "cs-infinite-scroll",
+  "cs-kanban"
+ ],
+ "perf-code-splitting": [
+  "cs-dashboard",
+  "incl-i18n-arch"
+ ],
+ "rt-optimistic": [
+  "rt-collab-model",
+  "rt-outbox"
+ ],
+ "api-request-cancellation": [
+  "cs-autocomplete",
+  "cs-maps"
+ ],
+ "state-optimistic-updates": [
+  "cs-feed",
+  "cs-kanban"
+ ],
+ "rt-ordering-dedupe": [
+  "cs-chat",
+  "cs-notifications"
+ ],
+ "state-url-as-state": [
+  "cs-dashboard",
+  "cs-datagrid"
+ ],
+ "perf-web-workers": [
+  "cs-spreadsheet",
+  "cs-uploader"
+ ],
+ "found-network-waterfall": [
+  "cs-uploader",
+  "cs-video"
+ ],
+ "perf-rendering-cost": [
+  "cs-ai-assistant",
+  "cs-maps"
+ ],
+ "sec-xss-sanitization": [
+  "cs-ai-assistant",
+  "cs-rte"
+ ],
+ "incl-aria-patterns": [
+  "cs-maps",
+  "cs-video"
+ ],
+ "incl-keyboard-grid": [
+  "cs-datagrid",
+  "cs-spreadsheet"
+ ],
+ "state-undo-redo": [
+  "cs-collab-editor",
+  "cs-rte"
+ ],
+ "sec-third-party-scripts": [
+  "cs-pdp-checkout",
+  "cs-widget"
+ ],
+ "perf-bundle-budgets": [
+  "cs-design-system",
+  "cs-widget"
+ ],
+ "found-http": [
+  "api-view-model"
+ ],
+ "found-http-caching": [
+  "arch-render-matrix"
+ ],
+ "found-network-latency": [
+  "arch-edge"
+ ],
+ "rt-sse": [
+  "ai-stream-transport"
+ ],
+ "sec-xss": [
+  "ai-untrusted-render"
+ ],
+ "ops-ci-pipeline": [
+  "incl-a11y-nfr"
+ ],
+ "perf-web-vitals": [
+  "ops-rum-vitals"
+ ],
+ "perf-rendering": [
+  "rt-backpressure"
+ ],
+ "perf-http-caching": [
+  "rt-caching"
+ ],
+ "arch-data-flow": [
+  "rt-local-first"
+ ],
+ "state-server-vs-client": [
+  "cs-autocomplete"
+ ],
+ "incl-combobox-pattern": [
+  "cs-autocomplete"
+ ],
+ "perf-long-tasks-scheduling": [
+  "cs-autocomplete"
+ ],
+ "state-normalized-cache": [
+  "cs-feed"
+ ],
+ "perf-image-delivery": [
+  "cs-feed"
+ ],
+ "rt-websocket-vs-sse": [
+  "cs-chat"
+ ],
+ "rt-reconnect-backfill": [
+  "cs-chat"
+ ],
+ "api-batching-dedupe": [
+  "cs-dashboard"
+ ],
+ "ops-error-boundaries": [
+  "cs-dashboard"
+ ],
+ "ai-streaming-ux": [
+  "cs-ai-assistant"
+ ],
+ "ai-tool-call-ui": [
+  "cs-ai-assistant"
+ ],
+ "api-streaming-responses": [
+  "cs-ai-assistant"
+ ],
+ "rt-multi-tab-coordination": [
+  "cs-notifications"
+ ],
+ "rt-crdt-vs-ot": [
+  "cs-collab-editor"
+ ],
+ "ui-scroll-restoration": [
+  "cs-infinite-scroll"
+ ],
+ "perf-memory-leaks": [
+  "cs-infinite-scroll"
+ ],
+ "sec-clickjacking-iframes": [
+  "cs-email"
+ ],
+ "arch-rendering-strategies": [
+  "cs-pdp-checkout"
+ ],
+ "ui-forms-validation": [
+  "cs-pdp-checkout"
+ ],
+ "ui-drag-and-drop": [
+  "cs-kanban"
+ ],
+ "sec-csp": [
+  "cs-widget"
+ ],
+ "ds-css-isolation": [
+  "cs-widget"
+ ],
+ "ds-tokens": [
+  "cs-design-system"
+ ],
+ "ds-versioning-releases": [
+  "cs-design-system"
+ ],
+ "ui-component-api-design": [
+  "cs-design-system"
+ ],
+ "arch-rendering-matrix": [
+  "arch-spa-routing"
+ ],
+ "ui-virtualization": [
+  "cs-log-tail"
+ ]
+}

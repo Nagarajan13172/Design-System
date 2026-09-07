@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/**
+ * TECHNICAL DEV-TOOL. Precise, dense, calm.
+ * Neutral base, ONE accent, borders instead of shadows, strong typography.
+ * The diagrams are the star; the chrome gets out of their way.
+ */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale: prose at 16/1.7, chrome at 14. Two sizes, used consistently. */
+  --text-chrome: 0.875rem;
+  --text-chrome--line-height: 1.5;
+  --text-prose: 1rem;
+  --text-prose--line-height: 1.7;
+}
+
+:root {
+  --bg:        oklch(99% 0.002 265);
+  --surface:   oklch(97.2% 0.003 265);
+  --raised:    oklch(100% 0 0);
+  --border:    oklch(90% 0.005 265);
+  --border-strong: oklch(82% 0.008 265);
+  --text:      oklch(24% 0.012 265);
+  --text-dim:  oklch(48% 0.010 265);
+  --text-faint:oklch(64% 0.008 265);
+  --accent:    oklch(52% 0.19 258);
+  --accent-bg: oklch(95% 0.03 258);
+
+  /* Semantic diagram scale. Every one is also distinguishable without colour:
+     spans carry labels, and kinds carry distinct hatch patterns. */
+  --d-network: oklch(58% 0.14 250);
+  --d-work:    oklch(56% 0.13 155);
+  --d-blocked: oklch(62% 0.15 55);
+  --d-paint:   oklch(56% 0.16 300);
+  --d-idle:    oklch(80% 0.01 265);
+  --d-error:   oklch(56% 0.19 25);
+  --d-stale:   oklch(56% 0.19 25);
+  --d-ghost:   oklch(78% 0.012 265);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        oklch(17% 0.006 265);
+    --surface:   oklch(20.5% 0.007 265);
+    --raised:    oklch(23% 0.008 265);
+    --border:    oklch(29% 0.009 265);
+    --border-strong: oklch(38% 0.012 265);
+    --text:      oklch(94% 0.004 265);
+    --text-dim:  oklch(72% 0.008 265);
+    --text-faint:oklch(56% 0.008 265);
+    --accent:    oklch(72% 0.15 258);
+    --accent-bg: oklch(28% 0.05 258);
+    --d-network: oklch(72% 0.13 250);
+    --d-work:    oklch(72% 0.12 155);
+    --d-blocked: oklch(76% 0.14 55);
+    --d-paint:   oklch(72% 0.14 300);
+    --d-idle:    oklch(38% 0.01 265);
+    --d-error:   oklch(70% 0.17 25);
+    --d-stale:   oklch(70% 0.17 25);
+    --d-ghost:   oklch(36% 0.01 265);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: oklch(17% 0.006 265); --surface: oklch(20.5% 0.007 265); --raised: oklch(23% 0.008 265);
+  --border: oklch(29% 0.009 265); --border-strong: oklch(38% 0.012 265);
+  --text: oklch(94% 0.004 265); --text-dim: oklch(72% 0.008 265); --text-faint: oklch(56% 0.008 265);
+  --accent: oklch(72% 0.15 258); --accent-bg: oklch(28% 0.05 258);
+  --d-network: oklch(72% 0.13 250); --d-work: oklch(72% 0.12 155); --d-blocked: oklch(76% 0.14 55);
+  --d-paint: oklch(72% 0.14 300); --d-idle: oklch(38% 0.01 265); --d-error: oklch(70% 0.17 25);
+  --d-stale: oklch(70% 0.17 25); --d-ghost: oklch(36% 0.01 265);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-chrome);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Motion is CSS transitions plus one rAF scrub head (ADR-5). Reduced motion
+   short-circuits the loop entirely and composites every annotation at once. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+.prose-body { font-size: var(--text-prose); line-height: 1.7; max-width: 40rem; color: var(--text); }
+.prose-body h2 { font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; margin: 2rem 0 0.625rem; }
+.prose-body p { margin: 0 0 1rem; }
+.prose-body strong { font-weight: 600; color: var(--text); }
+.prose-body code { font-family: var(--font-mono); font-size: 0.875em; background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 0.05em 0.3em; }
