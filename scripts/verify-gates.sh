@@ -166,6 +166,46 @@ expect_red "a serious axe violation on the primitive gallery" bash -c "
   npx playwright test e2e/a11y.spec.ts >/dev/null 2>&1; rc=\$?
   cp $BACKUP/th.bak src/styles/theme.css; exit \$rc"
 
+expect_red "a stale roadmap layout" bash -c "
+  cp $CUR $BACKUP/cur2.bak
+  perl -0pi -e \"s/(id: 'perf-lcp'.*?prereqs: \\[)/\\\${1}'state-races', /s\" $CUR
+  npx vite build >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/cur2.bak $CUR; exit \$rc"
+
+expect_red "the canvas becoming reachable by keyboard" bash -c "
+  cp src/features/roadmap/MapLayer.tsx $BACKUP/ml.bak
+  perl -0pi -e \"s/ aria-hidden\\n//\" src/features/roadmap/MapLayer.tsx
+  perl -0pi -e \"s/<div className=\\\"fixed inset-x-0 bottom-0 border-t\\\" aria-hidden/<div className=\\\"fixed inset-x-0 bottom-0 border-t\\\"/\" src/features/roadmap/MapLayer.tsx
+  npx playwright test e2e/roadmap.spec.ts >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/ml.bak src/features/roadmap/MapLayer.tsx; exit \$rc"
+
+echo
+echo "articulation"
+expect_red "a locked defence becoming editable" bash -c "
+  cp src/features/articulation/Defence.tsx $BACKUP/df.bak
+  perl -0pi -e \"s/setPhase\\('reveal'\\)/setPhase('write')/\" src/features/articulation/Defence.tsx
+  npx playwright test e2e/articulation.spec.ts >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/df.bak src/features/articulation/Defence.tsx; exit \$rc"
+
+expect_red "a flagged criterion scoreable without evidence" bash -c "
+  cp src/domain/articulation/defence.ts $BACKUP/dfd.bak
+  perl -0pi -e \"s/if \\(proposed === 0\\) return \\{ allowed: true \\}/if (true) return { allowed: true }/\" src/domain/articulation/defence.ts
+  npx vitest run src/domain/articulation >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/dfd.bak src/domain/articulation/defence.ts; exit \$rc"
+
+expect_red "a canvas key that admits only one architecture" bash -c "
+  cp content/cs/cs-autocomplete/sim.ts $BACKUP/csa.bak
+  perl -0pi -e \"s/  acceptedVariants: \\[/  acceptedVariants: [].concat([/\" content/cs/cs-autocomplete/sim.ts
+  perl -0pi -e \"s/\\n  \\],\\n  passThreshold/].slice(0,1)),\\n  passThreshold/\" content/cs/cs-autocomplete/sim.ts
+  npx vitest run content/cs >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/csa.bak content/cs/cs-autocomplete/sim.ts; exit \$rc"
+
+expect_red "a case study re-deriving a module's simulator" bash -c "
+  cp content/cs/cs-autocomplete/sim.ts $BACKUP/csa2.bak
+  perl -0pi -e \"s/export const measure = raceMeasure/export const measure = (p) => raceMeasure(p)/\" content/cs/cs-autocomplete/sim.ts
+  npx vitest run content/cs >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/csa2.bak content/cs/cs-autocomplete/sim.ts; exit \$rc"
+
 echo
 echo "the mechanism"
 expect_red "self-graded evidence allowed to move Mastery" bash -c "

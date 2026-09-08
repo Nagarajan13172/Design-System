@@ -1083,7 +1083,7 @@ export const CURRICULUM: CurriculumEntry[] = [
   {
     id: 'cs-autocomplete', domain: 'cs', tier: 'MVP',
     title: 'Case: Autocomplete / Typeahead',
-    level: 'core', verb: 'design', status: 'planned',
+    level: 'core', verb: 'design', status: 'drafted',
     studyMinutes: 60, primitive: 'LaneTimeline',
     authorHours: { estimate: 16, actual: null },
     prereqs: [],

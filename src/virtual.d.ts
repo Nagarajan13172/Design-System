@@ -21,12 +21,17 @@ declare module 'virtual:module-loader' {
     sim: { run: (p?: Record<string, unknown>) => Timeline<unknown>; DEFAULTS: Record<string, unknown> }
     Body: ComponentType
     renderSurface?: (props: Record<string, unknown>) => import('react').ReactNode
+    defence?: import('@/domain/articulation/types').DefencePrompt
   }
   export const BUILT_IDS: string[]
   export function loadModule(id: string): Promise<LoadedModule>
 }
+declare module 'virtual:roadmap-graph' {
+  import type { RoadmapLayout } from '@content/types'
+  export const LAYOUT: RoadmapLayout
+}
 declare module 'virtual:search-index' {
-  export const DOCS: { i: number; id: string; t: string; d: string; s: string }[]
+  export const DOCS: { i: number; id: string; t: string; d: string; s: string; kind: 'module' | 'domain' }[]
   export const INDEX: Record<string, number[]>
 }
 declare module '*.mdx' {

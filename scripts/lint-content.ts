@@ -175,6 +175,21 @@ for (const [id, { meta, claims, items }] of loaded) {
     if (kinds.size < 2) fail('completeness', id, `judgment items span ${kinds.size} kind(s) (deep requires >= 2)`)
   }
 
+  // PROBE DEPTH — the churn number.
+  //
+  // A card shows one probe per review, and repeating the same probe trains
+  // recognition of the probe rather than the idea. With ~60 cards and one probe
+  // each, a daily learner exhausts the deck in about three weeks and meets a
+  // permanent empty state — which for a product (rather than a portfolio piece) is
+  // the primary churn mechanism, not a polish item.
+  const PROBE_TARGET = 3
+  for (const c of claims) {
+    const real = c.probes.filter(p => items.some(i => i.id === p))
+    if (real.length < PROBE_TARGET) {
+      warn('probe-depth', id, `claim \`${c.id}\` has ${real.length} probe(s); ${PROBE_TARGET}+ keeps a daily learner from seeing the same question twice within a fortnight`)
+    }
+  }
+
   // 7. orphan claims and orphan items
   const claimIds = new Set(claims.map(c => c.id))
   const covered = new Set(items.flatMap(i => [i.primaryClaim, i.secondaryClaim].filter(Boolean) as string[]))

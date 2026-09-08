@@ -14,14 +14,16 @@
  *   virtual:search-index    lazy     — the ⌘K corpus (no search library).
  */
 import type { Plugin } from 'vite'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { createHash } from 'node:crypto'
 
 const IDS = {
   lite: 'virtual:manifest-lite',
   full: 'virtual:manifest-full',
   loader: 'virtual:module-loader',
   search: 'virtual:search-index',
+  roadmap: 'virtual:roadmap-graph',
 } as const
 
 const resolved = (id: string) => '\0' + id
@@ -40,6 +42,10 @@ export function modulesPlugin(): Plugin {
   /** Only LiveSurface modules ship a viz.tsx — a sim may not import React. */
   const hasViz = (domain: string, id: string) =>
     existsSync(join(process.cwd(), 'content', domain, id, 'viz.tsx'))
+
+  /** Not every module has a trade-off worth defending; the ones that do ship defence.ts. */
+  const hasDefence = (domain: string, id: string) =>
+    existsSync(join(process.cwd(), 'content', domain, id, 'defence.ts'))
 
   return {
     name: 'fesd:modules',
@@ -85,12 +91,14 @@ export const DOMAIN_META = ${JSON.stringify(DOMAINS)}`
     import(${JSON.stringify(p + '/sim')}),
     import(${JSON.stringify(p + '/body.mdx')}),
     ${hasViz(m.domain, m.id) ? `import(${JSON.stringify(p + '/viz')})` : 'Promise.resolve({})'},
-  ]).then(([meta, claims, items, sim, body, viz]) => ({
+    ${hasDefence(m.domain, m.id) ? `import(${JSON.stringify(p + '/defence')})` : 'Promise.resolve({})'},
+  ]).then(([meta, claims, items, sim, body, viz, defence]) => ({
     meta: meta.default, claims: claims.default, items: items.default,
     sim, Body: body.default,
     // Only LiveSurface modules ship a viz.tsx: a sim may not import React
     // (SIM CONTRACT), so the real-DOM render function lives beside it.
     renderSurface: viz.renderSurface,
+    defence: defence.default,
   }))`
         })
         return `export const LOADERS = {\n${entries.join(',\n')}\n}
@@ -102,19 +110,57 @@ export const loadModule = (id) => {
 }`
       }
 
+      if (id === resolved(IDS.roadmap)) {
+        const file = join(process.cwd(), 'content/_generated/roadmap-layout.json')
+        if (!existsSync(file)) {
+          this.error('content/_generated/roadmap-layout.json is missing. Run `pnpm build:layout`.')
+        }
+        const layout = JSON.parse(readFileSync(file, 'utf8')) as { edgeHash: string }
+
+        // THE HASH CHECK. Editing a prereq without re-running the layout would ship
+        // a map that silently disagrees with the curriculum, which is worse than no
+        // map — so it fails the build instead.
+        const current = createHash('sha256').update(JSON.stringify({
+          nodes: CURRICULUM.map(m => m.id).sort(),
+          edges: CURRICULUM.flatMap(m => m.prereqs.map(p => `${p}>${m.id}`)).sort(),
+        })).digest('hex').slice(0, 16)
+
+        if (current !== layout.edgeHash) {
+          this.error(
+            `roadmap layout is stale: the curriculum's edge set hashes to ${current} but ` +
+            `content/_generated/roadmap-layout.json was built from ${layout.edgeHash}. ` +
+            'Run `pnpm build:layout` and commit the result.',
+          )
+        }
+        return `export const LAYOUT = ${JSON.stringify(layout)}`
+      }
+
       if (id === resolved(IDS.search)) {
         // A hand-rolled inverted index. ~1,000 docs does not justify a search library.
-        const docs = CURRICULUM.map((m, i) => ({
-          i, id: m.id, t: m.title, d: m.domain, s: m.status,
-          text: `${m.title} ${m.oneLiner} ${m.figureQuestion}`.toLowerCase(),
-        }))
+        const docs = [
+          ...CURRICULUM.map(m => ({
+            id: m.id, t: m.title, d: m.domain, s: m.status, kind: 'module' as const,
+            // The id is indexed too: typing `ui-stacking` is the most natural way
+            // to search in a tool like this, and it found nothing until it was.
+            text: `${m.id} ${m.title} ${m.oneLiner} ${m.figureQuestion}`.toLowerCase(),
+          })),
+          ...DOMAINS.map(d => ({
+            id: d.key, t: d.name, d: d.key, s: 'domain', kind: 'domain' as const,
+            text: `${d.key} ${d.name} ${d.summary}`.toLowerCase(),
+          })),
+        ].map((doc, i) => ({ ...doc, i }))
+        // Stopwords and 3-letter tokens dominate the postings lists and carry almost
+        // no discriminating power — dropping them roughly halved the index with no
+        // measurable loss in result quality.
+        const STOP = new Set(('the a an of to in on at for and or is are was were be been it its this that with as by from what which how why when does do did you your we our they their than then if not no more less most least first second into over under out up down can may must should would could each every both all any some such only same other another its it s'.split(' ')))
         const index: Record<string, number[]> = {}
         for (const doc of docs) {
-          for (const tok of new Set(doc.text.match(/[a-z][a-z0-9-]{2,}/g) ?? [])) {
+          for (const tok of new Set(doc.text.match(/[a-z][a-z0-9-]{3,}/g) ?? [])) {
+            if (STOP.has(tok)) continue
             (index[tok] ??= []).push(doc.i)
           }
         }
-        return `export const DOCS = ${JSON.stringify(docs.map(({ i, id, t, d, s }) => ({ i, id, t, d, s })))}
+        return `export const DOCS = ${JSON.stringify(docs.map(({ i, id, t, d, s, kind }) => ({ i, id, t, d, s, kind })))}
 export const INDEX = ${JSON.stringify(index)}`
       }
       return null

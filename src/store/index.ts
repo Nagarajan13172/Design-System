@@ -7,6 +7,16 @@ import { prefs } from '@/data/repo'
  */
 interface AppState {
   theme: 'light' | 'dark' | null
+  /** ONE selection drives both the semantic list and the canvas. */
+  selectedModule: string | null
+  expandedDomains: Record<string, boolean>
+  select(id: string | null): void
+  /**
+   * Takes the DESIRED state, not a toggle. A domain that is open by default has no
+   * entry in the map, so `!undefined` is `true` and a first click on an open
+   * domain did nothing at all.
+   */
+  setDomainOpen(key: string, open: boolean): void
   streak: number
   lastReviewDay: string | null
   hydrated: boolean
@@ -23,6 +33,11 @@ const dayBefore = (d: string) => {
 
 export const useApp = create<AppState>((set, get) => ({
   theme: null, streak: 0, lastReviewDay: null, hydrated: false,
+  selectedModule: null,
+  expandedDomains: {},
+
+  select: id => set({ selectedModule: id }),
+  setDomainOpen: (key, open) => set(s => ({ expandedDomains: { ...s.expandedDomains, [key]: open } })),
 
   async hydrate() {
     const [theme, streak, lastReviewDay] = await Promise.all([

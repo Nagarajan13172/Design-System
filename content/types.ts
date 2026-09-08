@@ -313,4 +313,22 @@ export interface LiveSurfaceState {
   counters?: { label: string; value: string | number }[]
 }
 
+/**
+ * The roadmap layout, computed by `scripts/layout-roadmap.ts` at build time and
+ * committed. Declared here so the script and the app share one definition.
+ */
+export interface LayoutNode { id: string; x: number; y: number; w: number; h: number; domain: string }
+export interface LayoutBox { domain: string; name: string; x: number; y: number; w: number; h: number }
+export interface LayoutEdge { id: string; from: string; to: string; cross: boolean; points: [number, number][] }
+
+export interface RoadmapLayout {
+  /** sha256 over the node ids and prereq edges the layout was computed from. */
+  edgeHash: string
+  width: number
+  height: number
+  nodes: LayoutNode[]
+  boxes: LayoutBox[]
+  edges: LayoutEdge[]
+}
+
 export interface Rng { (): number }

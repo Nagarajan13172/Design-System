@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAutoFocus } from '@kit/useAutoFocus'
 import { Link } from '@/lib/nav'
 import { useReview } from '@/features/review/useReview'
@@ -6,6 +6,7 @@ import { RENDERERS, type RenderableKind } from '@/features/review/cards/CardRend
 import { summarise } from '@/features/review/session'
 import { useApp } from '@/store'
 import { BUILT, TOTAL } from 'virtual:manifest-lite'
+import { defences } from '@/data/repo'
 
 /**
  * /review — THE LANDING ROUTE.
@@ -21,8 +22,20 @@ import { BUILT, TOTAL } from 'virtual:manifest-lite'
 export default function Review() {
   const { session, deck, summary, claim, probe, prepare, start, grade, skip } = useReview()
   const { streak, hydrate, hydrated } = useApp()
+  const [dueDefence, setDueDefence] = useState<{ id: string; promptId: string } | null>(null)
 
   useEffect(() => { void hydrate(); void prepare() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The articulation queue is prepended to the deck as ONE item, never mixed into
+  // it: a four-minute written defence among twelve-second cards would blow the
+  // seven-minute budget the deck is built around.
+  useEffect(() => {
+    let live = true
+    void defences.dueBefore(Date.now()).then(rows => {
+      if (live && rows[0]) setDueDefence({ id: rows[0].id, promptId: rows[0].promptId })
+    })
+    return () => { live = false }
+  }, [])
 
   // Keyboard-first: a review session is a typing rhythm.
   useEffect(() => {
@@ -47,6 +60,20 @@ export default function Review() {
       </header>
 
       <main className="px-5 py-10 mx-auto" style={{ maxWidth: '44rem' }}>
+        {session.phase === 'deck' && dueDefence && (
+          <div className="mb-6 rounded border p-3" style={{ borderColor: 'var(--accent)', background: 'var(--accent-bg)' }}>
+            <div className="text-[11px] uppercase tracking-wide mb-1" style={{ color: 'var(--accent)' }}>
+              one defence is due again
+            </div>
+            <p className="mb-2" style={{ color: 'var(--text)' }}>
+              You argued this fourteen days ago. Write it again and see what the argument covers now.
+            </p>
+            <Link to={`/practice/defence/${dueDefence.promptId}`} className="nav-link" style={{ color: 'var(--accent)' }}>
+              Open it →
+            </Link>
+          </div>
+        )}
+
         {session.phase === 'deck' && <Deck deck={deck} summary={summary} onStart={start} />}
 
         {session.phase === 'running' && claim && probe && (

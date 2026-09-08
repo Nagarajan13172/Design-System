@@ -10,10 +10,26 @@
 const normalise = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim()
 
-/** True when at least one alternative from the group appears in the text. */
+/**
+ * True when at least one alternative from the group appears in the text.
+ *
+ * Matching is on WORD STEMS, not whole words: an author who lists `cancel` means to
+ * catch "cancelling" and "cancelled" too, and requiring them to enumerate every
+ * inflection makes the flag under-report exactly when the learner wrote a good
+ * answer. Multi-word alternatives are matched as phrases.
+ *
+ * The 4-character floor is what keeps the prefix rule from matching noise.
+ */
 export function groupPresent(text: string, group: string[]): boolean {
-  const t = ` ${normalise(text)} `
-  return group.some(alt => t.includes(` ${normalise(alt)} `) || t.includes(`${normalise(alt)} `))
+  const words = normalise(text).split(' ').filter(Boolean)
+  const haystack = ` ${words.join(' ')} `
+  return group.some(raw => {
+    const alt = normalise(raw)
+    if (!alt) return false
+    if (alt.includes(' ')) return haystack.includes(` ${alt} `)
+    if (alt.length < 4) return words.includes(alt)          // short tokens: exact only
+    return words.some(w => w.startsWith(alt))
+  })
 }
 
 export interface TokenReport {

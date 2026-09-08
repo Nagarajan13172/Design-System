@@ -1,0 +1,78 @@
+"Design a typeahead" is the most common opening in a frontend design round, and it is
+chosen because it is the smallest problem containing a real concurrency question.
+Almost everyone reaches for a debounce in the first thirty seconds. Almost nobody
+says what it actually buys.
+
+## What the debounce is for
+
+Firing a request per keystroke means eight requests for `react` typed at speed. A
+150ms trailing debounce takes a typed query down to roughly seven requests across the
+whole session rather than per word — a real reduction in request volume, server load
+and mobile bandwidth.
+
+That is the entire benefit. **A debounce is a cost control.** It changes how many
+requests you send. It does not change which response the list ends up showing, because
+it has no opinion about responses at all.
+
+## The failure nobody sees
+
+Measure the same typeahead with median latency 260ms and p95 600ms. About **8% of
+typed queries** end with the list showing results for a query that is no longer in the
+box.
+
+Every one of those requests returned 200. Nothing retried, nothing threw, nothing
+appears in error tracking. The session that breaks contains one unusually *fast*
+response — which is what lets a slower, older one land after it. So the latency
+dashboards look healthy too.
+
+This is the property worth naming out loud in an interview: it is a **correctness
+failure with no error condition**, and the only signal that would catch it is one you
+have to add deliberately — a counter incremented when a response's query does not
+match the current input.
+
+## The fix that passes review and fails in the field
+
+Now the part that separates answers.
+
+Raise the debounce to 400ms. On the same network the stale rate drops to **under 1%**.
+The bug stops reproducing. It ships.
+
+Put that identical build on a p95 of 1500ms — a train, a mid-tier Android, a bad
+afternoon — and it is back at roughly **10%**.
+
+Nothing regressed. The race window was never an absolute quantity you could tune below
+some safe constant; it is a *ratio* between your dispatch spacing and a latency tail
+you do not control. You tuned the half you control, on the network where the other half
+is smallest.
+
+And you paid for it: 400ms of delay on every request is a search box that feels slow,
+which is the thing the feature exists to avoid.
+
+## What the design does instead
+
+Put a guard on the edge between the response and the list.
+
+A monotonic sequence number — drop any response that is not the newest — takes the
+stale rate to **zero at every latency profile measured**, costs four lines, delays
+nothing, and cancels nothing. `AbortController` also works and additionally saves the
+bandwidth, with the caveat that aborting severs the client's interest in a response
+rather than the server's work.
+
+That is why the canvas for this case accepts either shape but requires *a* guard on
+that edge: the architecture question is not which guard, it is whether anything at all
+stands between a response and the DOM.
+
+## Running the round
+
+Open by separating the two problems out loud — request volume and response ordering —
+because most candidates conflate them and never recover. Say the debounce addresses
+the first and nothing else.
+
+Then name the failure as silent, because that is what makes it dangerous and it is
+what distinguishes someone who has debugged this from someone who has read about it.
+
+Then give the numbers, and give the flip condition with them: a debounce that looks
+sufficient on your machine is a ratio to a tail you do not control. When the
+interviewer asks what you would do differently under a tighter deadline, you already
+have the answer — sequencing first, because it is four lines and has no failure mode
+of its own; cancellation second, when bandwidth is the constraint worth spending on.

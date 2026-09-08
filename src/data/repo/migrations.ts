@@ -42,7 +42,19 @@ export const migrations: Record<number, Migration> = {
     db.createObjectStore('prefs', { keyPath: 'key' })
   },
 
-  // 2: (db, tx) => { ... }  <- add the next step here, with __fixtures__/v1.json committed.
+  /**
+   * v2 — the Trade-off Defence store.
+   *
+   * The first real migration, and the reason the ladder exists: a learner who has
+   * been reviewing for a month must not lose that history because a later milestone
+   * added a feature. `__fixtures__/v1.json` is a committed v1 database; the
+   * migration test opens it at the current version and asserts every row survived.
+   */
+  2: db => {
+    const defences = db.createObjectStore('defences', { keyPath: 'id' })
+    defences.createIndex('by-due', 'dueAt')
+    defences.createIndex('by-module', 'moduleId')
+  },
 }
 
 export function runMigrations(db: IDBPDatabase<FesdSchema>, tx: UpgradeTx, from: number, to: number) {

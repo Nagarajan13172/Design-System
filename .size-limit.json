@@ -1,18 +1,30 @@
 [
   {
-    "name": "landing — what a returning learner downloads to reach /review",
-    "path": ["dist/assets/index-*.js", "dist/assets/Review-*.js"],
+    "name": "landing \u2014 what a returning learner downloads to reach /review",
+    "path": [
+      "dist/assets/index-*.js",
+      "dist/assets/Review-*.js"
+    ],
     "limit": "95 kB",
     "gzip": true
   },
   {
-    "name": "one module with code drills — state-races",
+    "name": "/roadmap incremental \u2014 list + lazy map layer",
+    "path": [
+      "dist/assets/Roadmap-*.js",
+      "dist/assets/MapLayer-*.js"
+    ],
+    "limit": "25 kB",
+    "gzip": true
+  },
+  {
+    "name": "one module with code drills \u2014 state-races",
     "path": "dist/assets/m-state-races-*.js",
     "limit": "60 kB",
     "gzip": true
   },
   {
-    "name": "one module with a LiveSurface figure — incl-a11y-tree",
+    "name": "one module with a LiveSurface figure \u2014 incl-a11y-tree",
     "path": "dist/assets/m-incl-a11y-tree-*.js",
     "limit": "60 kB",
     "gzip": true
@@ -21,6 +33,15 @@
     "name": "the module route itself (primitives + drills + recall gate)",
     "path": "dist/assets/Module-*.js",
     "limit": "40 kB",
+    "gzip": true
+  },
+  {
+    "name": "the command palette and its full-text index (lazy, \u2318K only)",
+    "path": [
+      "dist/assets/Palette-*.js",
+      "dist/assets/usePalette-*.js"
+    ],
+    "limit": "30 kB",
     "gzip": true
   }
 ]

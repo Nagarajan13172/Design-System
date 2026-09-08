@@ -5,7 +5,7 @@ import type { AttemptGrading } from '@/domain/grading/types'
  * The durable schema. Review history IS the product's value, so every change here
  * needs a migration step and a committed fixture — see migrations.ts.
  */
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 /** One card per claim, 1:1, forever. `type CardId = ClaimId`. */
 export type CardId = ClaimId
@@ -91,6 +91,35 @@ export interface PrefsRow {
   value: unknown
 }
 
+/**
+ * A locked Trade-off Defence. Added in schema v2.
+ *
+ * Deliberately NOT a card: the articulation queue is a fixed 14-day interval,
+ * structurally isolated from FSRS. Routing a self-scored argument through the
+ * scheduler is the constraint-C breach this design exists to prevent.
+ */
+export interface DefenceRow {
+  id: string
+  promptId: string
+  moduleId: ModuleId
+  choiceId: string
+  flipParameter: string | null
+  text: string
+  textHash: string
+  lockedAt: number
+  words: number
+  overtimeSeconds: number
+  selfScores: Record<string, number>
+  evidence: Record<string, string>
+  /** Computed at lock time. The number the re-surface compares against. */
+  criteriaWithEvidence: number
+  /** When this comes back. Fixed interval, not scheduled. */
+  dueAt: number
+  /** Set once the learner has written a second answer and compared. */
+  revisitedAt: number | null
+  revisitCriteriaWithEvidence: number | null
+}
+
 export interface FesdSchema {
   cards: { key: CardId; value: CardRow; indexes: { 'by-due': number; 'by-module': ModuleId } }
   reviews: { key: string; value: ReviewRow; indexes: { 'by-card': CardId; 'by-ts': number } }
@@ -99,7 +128,8 @@ export interface FesdSchema {
   progress: { key: ModuleId; value: ModuleProgressRow }
   sessions: { key: string; value: SessionRow; indexes: { 'by-started': number } }
   prefs: { key: string; value: PrefsRow }
+  defences: { key: string; value: DefenceRow; indexes: { 'by-due': number; 'by-module': ModuleId } }
 }
 
 export type StoreName = keyof FesdSchema
-export const STORES: StoreName[] = ['cards', 'reviews', 'attempts', 'predictions', 'progress', 'sessions', 'prefs']
+export const STORES: StoreName[] = ['cards', 'reviews', 'attempts', 'predictions', 'progress', 'sessions', 'prefs', 'defences']

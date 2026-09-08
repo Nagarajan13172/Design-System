@@ -1,0 +1,28 @@
+{
+  "_comment": "A committed schema-v1 database. The migration test seeds this, opens at the CURRENT version, and asserts every row survived. This is what stands between a schema change and silently deleting a learner's months of review history.",
+  "cards": [
+    { "id": "state-races-c1", "moduleId": "state-races", "due": 1000, "stability": 4.2, "difficulty": 5.1,
+      "elapsed_days": 3, "scheduled_days": 6, "reps": 4, "lapses": 1, "state": 2, "last_review": 900, "status": "active" }
+  ],
+  "reviews": [
+    { "id": "state-races-c1|900", "cardId": "state-races-c1", "ts": 900, "rating": 3,
+      "itemId": "state-races-i1", "itemKind": "predict", "latencyMs": 4200, "pre": {}, "post": {} }
+  ],
+  "attempts": [
+    { "id": "state-races-i1|900", "itemId": "state-races-i1", "moduleId": "state-races", "claimId": "state-races-c1",
+      "itemKind": "predict", "ts": 900, "grading": { "kind": "auto", "correct": true, "score": 1, "latencyMs": 4200 }, "rehearsal": false }
+  ],
+  "predictions": [
+    { "figureId": "state-races-fig1", "moduleId": "state-races", "value": 4, "confidence": 70, "committedAt": 800 }
+  ],
+  "progress": [
+    { "moduleId": "state-races", "coverage": "covered", "coveredAt": 850, "confidence": 4, "confidenceAt": 850 }
+  ],
+  "sessions": [
+    { "id": "s|800", "startedAt": 800, "endedAt": 1200, "budgetSeconds": 420, "graded": 6, "correct": 5, "wrongThenRight": 1 }
+  ],
+  "prefs": [
+    { "key": "theme", "value": "dark" },
+    { "key": "streak", "value": 9 }
+  ]
+}

@@ -14,7 +14,7 @@ const lazyRoute = (load: () => Promise<{ default: React.ComponentType }>) => {
 }
 
 /**
- * /review is the landing route (M2); /m/:id and /progress arrive in M3, /roadmap in M5.
+ * /review is the landing route (M2); /m/:id and /progress arrived in M3, /roadmap in M5.
  * `/` redirects to work, not to a marketing page and not to a map.
  */
 export const routes: RouteDef[] = [
@@ -22,6 +22,10 @@ export const routes: RouteDef[] = [
   { path: '/review', element: lazyRoute(() => import('./routes/Review')) },
   { path: '/m/:moduleId', element: lazyRoute(() => import('./routes/Module')) },
   { path: '/progress', element: lazyRoute(() => import('./routes/Progress')) },
+  { path: '/roadmap', element: lazyRoute(() => import('./routes/Roadmap')) },
+  { path: '/start', element: lazyRoute(() => import('./routes/Start')) },
+  { path: '/practice', element: lazyRoute(() => import('./routes/Practice')) },
+  { path: '/practice/defence/:itemId', element: lazyRoute(() => import('./routes/Practice')) },
   { path: '/dev', element: lazyRoute(() => import('./routes/DevIndex')) },
   { path: '/dev/module/:moduleId', element: lazyRoute(() => import('./routes/DevModule')) },
   { path: '/dev/primitives', element: lazyRoute(() => import('./routes/DevPrimitives')) },

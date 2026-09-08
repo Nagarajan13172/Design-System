@@ -22,6 +22,8 @@ interface Row {
   id: string; primitive: string; estimate: number
   prose: number; claims: number; items: number; autoItems: number
   simLines: number; testLines: number; totalLines: number
+  /** Mean probes per claim — the number that decides how long the deck lasts. */
+  probeDepth: number
 }
 
 const rows: Row[] = []
@@ -38,21 +40,32 @@ for (const m of CURRICULUM.filter(m => m.status !== 'planned')) {
     claims: claims.length, items: items.length,
     autoItems: items.filter(i => !['claim-recall', 'free-recall', 'tradeoff-defense'].includes(i.kind)).length,
     simLines, testLines,
+    probeDepth: claims.length
+      ? Number((claims.reduce((s, c) => s + c.probes.filter(p => items.some(i => i.id === p)).length, 0) / claims.length).toFixed(1))
+      : 0,
     totalLines: simLines + testLines + lines(join(dir, 'claims.ts')) + lines(join(dir, 'items.ts')) + lines(join(dir, 'meta.ts')),
   })
 }
 
 const pad = (s: string | number, n: number) => String(s).padEnd(n)
-console.log(pad('module', 22) + pad('primitive', 14) + pad('est', 5) + pad('prose', 7) + pad('claims', 8) + pad('items', 7) + pad('auto', 6) + pad('sim', 6) + pad('test', 6) + 'lines')
+console.log(pad('module', 22) + pad('primitive', 14) + pad('est', 5) + pad('prose', 7) + pad('claims', 8) + pad('items', 7) + pad('auto', 6) + pad('probes', 8) + pad('sim', 6) + pad('test', 6) + 'lines')
 for (const r of rows) {
   console.log(pad(r.id, 22) + pad(r.primitive, 14) + pad(r.estimate + 'h', 5) + pad(r.prose, 7) +
-    pad(r.claims, 8) + pad(r.items, 7) + pad(r.autoItems, 6) + pad(r.simLines, 6) + pad(r.testLines, 6) + r.totalLines)
+    pad(r.claims, 8) + pad(r.items, 7) + pad(r.autoItems, 6) + pad(r.probeDepth, 8) + pad(r.simLines, 6) + pad(r.testLines, 6) + r.totalLines)
 }
 
 const avg = (f: (r: Row) => number) => Math.round(rows.reduce((s, r) => s + f(r), 0) / Math.max(1, rows.length))
+const meanProbe = rows.reduce((s, r) => s + r.probeDepth, 0) / Math.max(1, rows.length)
 console.log('\n' + pad('MEAN', 22) + pad('', 14) + pad(avg(r => r.estimate) + 'h', 5) + pad(avg(r => r.prose), 7) +
   pad(avg(r => r.claims), 8) + pad(avg(r => r.items), 7) + pad(avg(r => r.autoItems), 6) +
-  pad(avg(r => r.simLines), 6) + pad(avg(r => r.testLines), 6) + avg(r => r.totalLines))
+  pad(meanProbe.toFixed(1), 8) + pad(avg(r => r.simLines), 6) + pad(avg(r => r.testLines), 6) + avg(r => r.totalLines))
+
+// The churn arithmetic, stated rather than assumed.
+const totalClaims = rows.reduce((s, r) => s + r.claims, 0)
+const daysToExhaust = Math.round((totalClaims * meanProbe) / 20)
+console.log(`\n${totalClaims} cards at ${meanProbe.toFixed(1)} probes each. At ~20 reviews a day a learner`)
+console.log(`sees every probe in about ${daysToExhaust} days. That number, not engineering, is what`)
+console.log('decides whether this is a product or a demo.')
 
 console.log(`\n${rows.length} modules authored. authorHours.actual is null for all of them:`)
 console.log('it means HUMAN hours, and recording a number nobody spent would defeat the')

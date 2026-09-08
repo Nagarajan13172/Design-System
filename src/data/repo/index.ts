@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from 'idb'
-import type { FesdSchema, CardRow, ReviewRow, AttemptRow, PredictionRow, ModuleProgressRow, SessionRow, StoreName } from './schema'
+import type { FesdSchema, CardRow, ReviewRow, AttemptRow, PredictionRow, ModuleProgressRow, SessionRow, DefenceRow, StoreName } from './schema'
 import { SCHEMA_VERSION, STORES } from './schema'
 import { runMigrations } from './migrations'
 import type { ClaimId, FigureId, ModuleId } from '@content/types'
@@ -139,6 +139,18 @@ export const sessions = {
   },
 }
 
+export const defences = {
+  async put(row: DefenceRow) { return write(db => db.put('defences', row)) },
+  async all() { return (await openRepo()).getAll('defences') },
+  /** The articulation queue: a FIXED interval, never touched by the scheduler. */
+  async dueBefore(ts: number) {
+    const db = await openRepo()
+    const rows = await db.getAllFromIndex('defences', 'by-due', IDBKeyRange.upperBound(ts))
+    return rows.filter(d => d.revisitedAt == null)
+  },
+  async byModule(moduleId: ModuleId) { return (await openRepo()).getAllFromIndex('defences', 'by-module', moduleId) },
+}
+
 export const prefs = {
   async get<T>(key: string, fallback: T): Promise<T> {
     const row = await (await openRepo()).get('prefs', key)
@@ -165,4 +177,4 @@ export async function bulkPut(store: StoreName, rows: unknown[]) {
 }
 
 export { SCHEMA_VERSION, STORES }
-export type { CardRow, ReviewRow, AttemptRow, PredictionRow, ModuleProgressRow, SessionRow, StoreName }
+export type { CardRow, ReviewRow, AttemptRow, PredictionRow, ModuleProgressRow, SessionRow, DefenceRow, StoreName }
