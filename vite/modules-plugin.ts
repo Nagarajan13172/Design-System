@@ -24,6 +24,7 @@ const IDS = {
   loader: 'virtual:module-loader',
   search: 'virtual:search-index',
   roadmap: 'virtual:roadmap-graph',
+  cases: 'virtual:cases',
 } as const
 
 const resolved = (id: string) => '\0' + id
@@ -46,6 +47,11 @@ export function modulesPlugin(): Plugin {
   /** Not every module has a trade-off worth defending; the ones that do ship defence.ts. */
   const hasDefence = (domain: string, id: string) =>
     existsSync(join(process.cwd(), 'content', domain, id, 'defence.ts'))
+
+  /** Case studies ship case.ts: the prompt, the keys and the ladder's decision points. */
+  const hasCase = (domain: string, id: string) =>
+    existsSync(join(process.cwd(), 'content', domain, id, 'case.ts'))
+
 
   return {
     name: 'fesd:modules',
@@ -92,13 +98,15 @@ export const DOMAIN_META = ${JSON.stringify(DOMAINS)}`
     import(${JSON.stringify(p + '/body.mdx')}),
     ${hasViz(m.domain, m.id) ? `import(${JSON.stringify(p + '/viz')})` : 'Promise.resolve({})'},
     ${hasDefence(m.domain, m.id) ? `import(${JSON.stringify(p + '/defence')})` : 'Promise.resolve({})'},
-  ]).then(([meta, claims, items, sim, body, viz, defence]) => ({
+    ${hasCase(m.domain, m.id) ? `import(${JSON.stringify(p + '/case')})` : 'Promise.resolve({})'},
+  ]).then(([meta, claims, items, sim, body, viz, defence, kase]) => ({
     meta: meta.default, claims: claims.default, items: items.default,
     sim, Body: body.default,
     // Only LiveSurface modules ship a viz.tsx: a sim may not import React
     // (SIM CONTRACT), so the real-DOM render function lives beside it.
     renderSurface: viz.renderSurface,
     defence: defence.default,
+    caseSpec: kase.default,
   }))`
         })
         return `export const LOADERS = {\n${entries.join(',\n')}\n}
@@ -106,6 +114,21 @@ export const BUILT_IDS = ${JSON.stringify(built.map(m => m.id))}
 export const loadModule = (id) => {
   const l = LOADERS[id]
   if (!l) return Promise.reject(new Error(\`module "\${id}" is not built (status: planned)\`))
+  return l()
+}`
+      }
+
+      if (id === resolved(IDS.cases)) {
+        // Cases are their own content type: the independent partner of a ladder pair
+        // ships as keys only and is deliberately NOT a built module.
+        const withCase = CURRICULUM.filter(m => hasCase(m.domain, m.id))
+        const entries = withCase.map(m =>
+          `  ${JSON.stringify(m.id)}: () => import(${JSON.stringify(`@content/${m.domain}/${m.id}/case`)}).then(m => m.default)`)
+        return `export const CASE_IDS = ${JSON.stringify(withCase.map(m => m.id))}
+export const CASE_LOADERS = {\n${entries.join(',\n')}\n}
+export const loadCase = (id) => {
+  const l = CASE_LOADERS[id]
+  if (!l) return Promise.reject(new Error(\`no case \${id}\`))
   return l()
 }`
       }

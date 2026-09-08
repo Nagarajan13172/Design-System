@@ -1,3 +1,7 @@
+import type { Port, PaletteNode, GraphNode, GraphEdge, Graph, CanvasKey } from '@content/types'
+
+export type { Port, PaletteNode, GraphNode, GraphEdge, Graph, CanvasKey }
+
 /**
  * ARCHITECTURE GRADING — build once, use four ways.
  *
@@ -10,48 +14,6 @@
  * fixed node types with declared port types means a connection is either meaningful
  * or refused, so the artifact is a graph rather than a picture.
  */
-
-export interface Port { id: string; type: string; dir: 'in' | 'out' }
-
-export interface PaletteNode {
-  type: string
-  label: string
-  ports: Port[]
-  /** How many of this node a design may contain. */
-  max?: number
-}
-
-export interface GraphNode { id: string; type: string }
-export interface GraphEdge { id: string; from: string; fromPort: string; to: string; toPort: string }
-export interface Graph { nodes: GraphNode[]; edges: GraphEdge[] }
-
-export interface CanvasKey {
-  palette: PaletteNode[]
-  /** Node types the design must contain. */
-  requiredNodes: string[]
-  /** Connections the design must make, as [fromType, toType]. */
-  requiredEdges: [string, string][]
-  /** Connections that are actively wrong — a direct client-to-database link, say. */
-  forbiddenEdges: [string, string][]
-  invariants: {
-    id: string
-    label: string
-    holds: (g: Graph, k: CanvasKey) => boolean
-    /**
-     * A CRITICAL invariant is the architecture, not a detail. Failing one zeroes the
-     * design the way zero required edges does — because "correct except for the one
-     * thing the case is about" is not a partial answer, it is the bug.
-     */
-    critical?: boolean
-  }[]
-  /**
-   * At least two DIFFERENT graphs that should both pass. A key admitting exactly
-   * one shape teaches "guess my diagram" rather than architecture, so lint and the
-   * unit tests require >= 2 and assert each clears the threshold.
-   */
-  acceptedVariants: Graph[]
-  passThreshold: number
-}
 
 /** A connection is only offered when the port types match and the direction is right. */
 export function canConnect(key: CanvasKey, from: GraphNode, fromPort: string, to: GraphNode, toPort: string): boolean {

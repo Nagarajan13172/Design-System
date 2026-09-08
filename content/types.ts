@@ -331,4 +331,113 @@ export interface RoadmapLayout {
   edges: LayoutEdge[]
 }
 
+export interface Port { id: string; type: string; dir: 'in' | 'out' }
+
+export interface PaletteNode {
+  type: string
+  label: string
+  ports: Port[]
+  /** How many of this node a design may contain. */
+  max?: number
+}
+
+export interface GraphNode { id: string; type: string }
+export interface GraphEdge { id: string; from: string; fromPort: string; to: string; toPort: string }
+export interface Graph { nodes: GraphNode[]; edges: GraphEdge[] }
+
+export interface CanvasKey {
+  palette: PaletteNode[]
+  /** Node types the design must contain. */
+  requiredNodes: string[]
+  /** Connections the design must make, as [fromType, toType]. */
+  requiredEdges: [string, string][]
+  /** Connections that are actively wrong — a direct client-to-database link, say. */
+  forbiddenEdges: [string, string][]
+  invariants: {
+    id: string
+    label: string
+    holds: (g: Graph, k: CanvasKey) => boolean
+    /**
+     * A CRITICAL invariant is the architecture, not a detail. Failing one zeroes the
+     * design the way zero required edges does — because "correct except for the one
+     * thing the case is about" is not a partial answer, it is the bug.
+     */
+    critical?: boolean
+  }[]
+  /**
+   * At least two DIFFERENT graphs that should both pass. A key admitting exactly
+   * one shape teaches "guess my diagram" rather than architecture, so lint and the
+   * unit tests require >= 2 and assert each clears the threshold.
+   */
+  acceptedVariants: Graph[]
+  passThreshold: number
+}
+
+/**
+ * THE CASE LADDER.
+ *
+ * Module knowledge to a full design round is a cliff, not a ramp. The rungs remove
+ * scaffolding one layer at a time:
+ *
+ *   worked — untimed, gated at numbered decision points, the reasoning shown
+ *   faded  — most of the design pre-built; the load-bearing parts blank
+ *   mini   — one subsystem, a hard clock, no hints, and A DIFFERENT CASE
+ *
+ * The last part is the rule that makes it a ladder rather than a rehearsal: running
+ * the independent stage on the same case measures recall of the walkthrough.
+ */
+export interface DecisionPoint {
+  id: string
+  /** Asked BEFORE the walkthrough reveals what it did. */
+  question: string
+  options: string[]
+  correct: number
+  /** What the decision actually turns on — shown whichever way they answered. */
+  why: string
+}
+
+export interface RequirementChip {
+  id: string
+  text: string
+  /** How much of the design changes if this requirement changes. */
+  blastRadius: 'high' | 'some' | 'none'
+}
+
+export interface LedgerEntry {
+  id: string
+  decision: string
+  chose: string
+  rejected: string
+  /** REQUIRED. A ledger row without a flip condition is a pros-and-cons list. */
+  flipsWhen: string
+}
+
+export interface Subsystem {
+  id: string
+  label: string
+  /** The one question the mini-case asks about this subsystem. */
+  focus: string
+}
+
+export interface CaseSpec {
+  id: string
+  moduleId: ModuleId
+  /** As an interviewer states it, not as a spec. */
+  prompt: string
+  requirements: RequirementChip[]
+  ledger: LedgerEntry[]
+  decisionPoints: DecisionPoint[]
+  subsystems: Subsystem[]
+  /**
+   * What this case is structurally about. The pairing lint compares these plus the
+   * SEMANTIC key (required edges, invariants) — never the palette's labels, which
+   * would call two cases analogous for sharing the word "cache".
+   */
+  structureTags: string[]
+  /** The analogous-but-different case the independent rung runs on. */
+  independentPartner?: string
+  /** The machine-gradable architecture key. Cases carry their own. */
+  canvasKey: CanvasKey
+}
+
 export interface Rng { (): number }

@@ -207,6 +207,26 @@ expect_red "a case study re-deriving a module's simulator" bash -c "
   cp $BACKUP/csa2.bak content/cs/cs-autocomplete/sim.ts; exit \$rc"
 
 echo
+echo "the ladder"
+expect_red "the independent rung running on the same case" bash -c "
+  cp src/routes/Case.tsx $BACKUP/case.bak
+  perl -0pi -e \"s/stage === 'mini' && base.independentPartner/false \\&\\& base.independentPartner/\" src/routes/Case.tsx
+  npx playwright test e2e/ladder.spec.ts >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/case.bak src/routes/Case.tsx; exit \$rc"
+
+expect_red "a worked/independent pair that only shares vocabulary" bash -c "
+  cp content/cs/cs-log-tail/case.ts $BACKUP/lt.bak
+  perl -0pi -e \"s/'unbounded-stream', 'bounded-surface', 'edge-guard', 'ordering', 'backpressure'/'forms', 'validation'/\" content/cs/cs-log-tail/case.ts
+  npx tsx scripts/lint-content.ts >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/lt.bak content/cs/cs-log-tail/case.ts; exit \$rc"
+
+expect_red "hints that cost nothing" bash -c "
+  cp src/domain/case/ladder.ts $BACKUP/ld.bak
+  perl -0pi -e \"s/export const HINT_PENALTY = 0.1/export const HINT_PENALTY = 0/\" src/domain/case/ladder.ts
+  npx vitest run src/domain/case >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/ld.bak src/domain/case/ladder.ts; exit \$rc"
+
+echo
 echo "hardening"
 expect_red "a stale deploy white-screening instead of announcing" bash -c "
   cp src/features/recovery/StaleBuildBar.tsx $BACKUP/sb.bak

@@ -6,6 +6,7 @@ import { Defence } from '@/features/articulation/Defence'
 import { compare } from '@/domain/articulation/defence'
 import { ARTICULATION_INTERVAL_DAYS, type DefencePrompt } from '@/domain/articulation/types'
 import { defences } from '@/data/repo'
+import { CASE_IDS } from 'virtual:cases'
 import type { DefenceRow } from '@/data/repo/schema'
 
 /**
@@ -128,7 +129,26 @@ export default function Practice() {
         </section>
       )}
 
-      <h2 className="text-[11px] uppercase tracking-wider mb-2" style={{ color: 'var(--text-faint)' }}>available</h2>
+      <section className="mb-8">
+        <h2 className="text-[11px] uppercase tracking-wider mb-2" style={{ color: 'var(--text-faint)' }}>the case ladder</h2>
+        <p className="mb-2 text-[13px]" style={{ color: 'var(--text-dim)' }}>
+          Worked, then faded, then a different case on a hard clock. The rungs come off in that
+          order because someone who has only seen a worked example has watched somebody else think.
+        </p>
+        <ul className="grid gap-1.5">
+          {CASE_IDS.map(id => (
+            <li key={id}>
+              <Link to={`/practice/case/${id}?stage=worked`} className="nav-link block px-3 py-2 rounded border"
+                    style={{ borderColor: 'var(--border-strong)', background: 'var(--raised)' }}>
+                <span className="font-mono text-[11px]" style={{ color: 'var(--text-faint)' }}>{id}</span>
+              </Link>
+            </li>
+          ))}
+          {!CASE_IDS.length && <li style={{ color: 'var(--text-faint)' }}>No cases authored yet.</li>}
+        </ul>
+      </section>
+
+      <h2 className="text-[11px] uppercase tracking-wider mb-2" style={{ color: 'var(--text-faint)' }}>trade-off defences</h2>
       <ul className="grid gap-1.5">
         {prompts.map(({ prompt, title }) => (
           <li key={prompt.id}>

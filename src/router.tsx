@@ -31,6 +31,7 @@ export const routes: RouteDef[] = [
   { path: '/settings', element: lazyRoute(() => import('./routes/Settings')) },
   { path: '/docs', element: lazyRoute(() => import('./routes/Docs')) },
   { path: '/practice/defence/:itemId', element: lazyRoute(() => import('./routes/Practice')) },
+  { path: '/practice/case/:caseId', element: lazyRoute(() => import('./routes/Case')) },
   { path: '/dev', element: lazyRoute(() => import('./routes/DevIndex')) },
   { path: '/dev/module/:moduleId', element: lazyRoute(() => import('./routes/DevModule')) },
   { path: '/dev/primitives', element: lazyRoute(() => import('./routes/DevPrimitives')) },

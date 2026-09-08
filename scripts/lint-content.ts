@@ -119,7 +119,11 @@ for (const m of CURRICULUM) {
   const dir = join('content', m.domain, m.id)
   const present = existsSync(dir)
   if (m.status === 'planned') {
-    if (present) warn('status', m.id, `status is 'planned' but ${dir} exists — flip it to 'drafted'`)
+    // A directory holding ONLY case.ts is a case-ladder partner shipping keys, not
+    // an unflagged module: the independent rung needs a gradable key and deliberately
+    // no walkthrough, prose or figure.
+    const keysOnly = present && readdirSync(dir).every(f => f === 'case.ts')
+    if (present && !keysOnly) warn('status', m.id, `status is 'planned' but ${dir} has module content — flip it to 'drafted'`)
     continue
   }
   if (!present) { fail('status', m.id, `status is '${m.status}' but ${dir} does not exist`); continue }
@@ -286,6 +290,35 @@ for (const [id, { timeline, claims }] of loaded) {
     const { writeFileSync } = await import('node:fs')
     writeFileSync(LOCK, JSON.stringify(current, null, 1) + '\n')
     console.log(`  updated ${LOCK} (${Object.keys(current).length} ids)`)
+  }
+}
+
+// --- 14. the case ladder's pairing rule --------------------------------------
+// A worked/independent pair must share STRUCTURE and differ in SURFACE. Running the
+// independent rung on the case that was just walked through measures recall of the
+// walkthrough, which is the specific failure the ladder exists to avoid.
+{
+  const { checkPairing } = await import('../src/domain/case/ladder')
+  const specs = new Map<string, import('../content/types').CaseSpec>()
+  for (const m of CURRICULUM) {
+    const file = join(process.cwd(), 'content', m.domain, m.id, 'case.ts')
+    if (!existsSync(file)) continue
+    specs.set(m.id, (await import(file)).default)
+  }
+  for (const [id, spec] of specs) {
+    if (!spec.canvasKey) { fail('case', id, 'case.ts has no canvasKey, so nothing can be graded'); continue }
+    if (!spec.independentPartner) {
+      warn('case', id, 'no independentPartner: without one the ladder ends at the faded rung')
+      continue
+    }
+    const partner = specs.get(spec.independentPartner)
+    if (!partner) {
+      fail('case', id, `independentPartner \`${spec.independentPartner}\` has no case.ts`)
+      continue
+    }
+    for (const p of checkPairing(spec, partner, spec.canvasKey, partner.canvasKey)) {
+      fail('case-pairing', `${id} / ${partner.id}`, `${p.kind}: ${p.detail}`)
+    }
   }
 }
 

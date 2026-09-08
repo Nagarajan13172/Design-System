@@ -24,6 +24,7 @@ declare module 'virtual:module-loader' {
     Body: ComponentType
     renderSurface?: (props: Record<string, unknown>) => import('react').ReactNode
     defence?: import('@/domain/articulation/types').DefencePrompt
+    caseSpec?: import('@content/types').CaseSpec
   }
   export const BUILT_IDS: string[]
   export function loadModule(id: string): Promise<LoadedModule>
@@ -31,6 +32,11 @@ declare module 'virtual:module-loader' {
 declare module 'virtual:roadmap-graph' {
   import type { RoadmapLayout } from '@content/types'
   export const LAYOUT: RoadmapLayout
+}
+declare module 'virtual:cases' {
+  import type { CaseSpec } from '@content/types'
+  export const CASE_IDS: string[]
+  export function loadCase(id: string): Promise<CaseSpec>
 }
 declare module 'virtual:search-index' {
   export const DOCS: { i: number; id: string; t: string; d: string; s: string; kind: 'module' | 'domain' }[]

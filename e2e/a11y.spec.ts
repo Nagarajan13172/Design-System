@@ -7,7 +7,7 @@ import AxeBuilder from '@axe-core/playwright'
  * labelling defect in a primitive fails ONCE here, rather than in each of the
  * dozens of modules that will eventually use it.
  */
-const ROUTES = ['/dev/primitives', '/review', '/progress', '/m/state-races', '/roadmap', '/start', '/practice', '/settings', '/docs']
+const ROUTES = ['/dev/primitives', '/review', '/progress', '/m/state-races', '/roadmap', '/start', '/practice', '/settings', '/docs', '/practice/case/cs-autocomplete?stage=faded']
 
 for (const route of ROUTES) {
   test(`${route} has no serious or critical axe violations`, async ({ page }) => {
