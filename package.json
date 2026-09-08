@@ -17,7 +17,8 @@
     "build:layout": "tsx scripts/layout-roadmap.ts",
     "size": "size-limit",
     "ci": "./scripts/ci.sh",
-    "gates": "./scripts/verify-gates.sh"
+    "gates": "./scripts/verify-gates.sh",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",
@@ -25,13 +26,13 @@
     "immer": "^10.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router": "^7.18.3",
     "ts-fsrs": "^4.4.1",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "@mdx-js/rollup": "^3.1.1",
+    "@playwright/test": "^1.63.0",
     "@size-limit/file": "^13.0.3",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/react": "^16.3.3",
@@ -42,7 +43,9 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9.17.0",
-    "fake-indexeddb": "^6.0.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^25.0.1",
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",

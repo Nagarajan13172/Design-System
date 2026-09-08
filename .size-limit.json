@@ -1,13 +1,19 @@
 [
   {
-    "name": "landing (/review) — the app's home",
-    "path": "dist/assets/index-*.js",
+    "name": "landing — what a returning learner downloads to reach /review",
+    "path": ["dist/assets/index-*.js", "dist/assets/Review-*.js"],
     "limit": "95 kB",
     "gzip": true
   },
   {
-    "name": "per-module incremental — sim + claims + items + body + primitive",
-    "path": ["dist/assets/sim-*.js", "dist/assets/claims-*.js", "dist/assets/items-*.js", "dist/assets/body-*.js", "dist/assets/StateMatrix-*.js"],
+    "name": "one module — state-races, incremental over the landing chunk",
+    "path": "dist/assets/m-state-races-*.js",
+    "limit": "60 kB",
+    "gzip": true
+  },
+  {
+    "name": "one module — found-event-loop",
+    "path": "dist/assets/m-found-event-loop-*.js",
     "limit": "60 kB",
     "gzip": true
   }

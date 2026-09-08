@@ -8,6 +8,15 @@ cd "$(dirname "$0")/.."
 pass=0; fail=0
 BACKUP=$(mktemp -d)
 
+# This script edits the working tree to prove gates fire, so it must leave the tree
+# exactly as it found it. A previous version rm -rf'd a content directory it had not
+# backed up and deleted an authored module; this check makes that loud.
+CONTENT_BEFORE=$(find content -type f | sort | md5)
+trap 'AFTER=$(find content -type f | sort | md5); \
+  if [ "$AFTER" != "$CONTENT_BEFORE" ]; then \
+    printf "\033[31mFATAL: verify-gates.sh changed content/ and did not restore it\033[0m\n"; exit 2; fi; \
+  rm -rf "$BACKUP"' EXIT
+
 restore() { for f in "$@"; do [ -f "$BACKUP/$(basename "$f")" ] && cp "$BACKUP/$(basename "$f")" "$f"; done; }
 backup()  { for f in "$@"; do cp "$f" "$BACKUP/$(basename "$f")"; done; }
 
@@ -70,39 +79,52 @@ perl -0pi -e "s/channels: \['requests'\], explains: 'state-races-c1'/channels: [
 expect_red "3 animated channels on a single frame" $LINT
 restore "$SIM"
 
-# a claim in another module sharing >=3 concept-token groups
-mkdir -p content/state/state-taxonomy
-cat > content/state/state-taxonomy/meta.ts <<'EOF'
+# A claim in another module sharing >=3 concept-token groups.
+#
+# NOTE: this gate needs a REAL curriculum id (lint only loads modules the curriculum
+# knows about), so it borrows one and must put back whatever was there. An earlier
+# version rm -rf'd the directory unconditionally and deleted an authored module.
+DUP=content/state/state-taxonomy
+STASH="$BACKUP/dup-stash"
+[ -d "$DUP" ] && mv "$DUP" "$STASH"
+mkdir -p "$DUP"
+cat > "$DUP/meta.ts" <<'EOF'
 import type { ModuleMeta } from '../../types'
 const meta: ModuleMeta = { id: 'state-taxonomy', status: 'drafted', sources: [], reviewedBy: null, reviewedAt: null,
   figure: { id: 'f', question: 'Which of the three failures fires first in production?', primitive: 'StateMatrix', control: 'rank' } }
 export default meta
 EOF
-cat > content/state/state-taxonomy/claims.ts <<'EOF'
+cat > "$DUP/claims.ts" <<'EOF'
 import type { Claim } from '../../types'
 const claims: Claim[] = [
-  { id: 'state-taxonomy-c1', assertion: 'Duplicated on purpose to prove the one-owner gate fires.', evidence: 'derivation',
-    conceptTokens: [['order','sequence','ordering'],['arrive','arrival','complete','completion'],['dispatch','issue','sent','fired']], probes: ['state-taxonomy-i1'] },
-  { id: 'state-taxonomy-c2', assertion: 'A second claim so the module satisfies the 4-8 claim rule.', evidence: 'derivation', conceptTokens: [['a']], probes: ['state-taxonomy-i2'] },
-  { id: 'state-taxonomy-c3', assertion: 'A third claim so the module satisfies the 4-8 claim rule.', evidence: 'derivation', conceptTokens: [['b']], probes: ['state-taxonomy-i3'] },
-  { id: 'state-taxonomy-c4', assertion: 'A fourth claim so the module satisfies the 4-8 claim rule.', evidence: 'derivation', conceptTokens: [['c']], probes: ['state-taxonomy-i4'] },
+  { id: 'dup-c1', assertion: 'Duplicated on purpose to prove the one-owner gate fires.', evidence: 'derivation',
+    conceptTokens: [['order','sequence','ordering'],['arrive','arrival','complete','completion'],['dispatch','issue','sent','fired']], probes: ['dup-i1'] },
+  { id: 'dup-c2', assertion: 'A second claim so the module satisfies the 4-8 claim rule.', evidence: 'derivation', conceptTokens: [['a']], probes: ['dup-i2'] },
+  { id: 'dup-c3', assertion: 'A third claim so the module satisfies the 4-8 claim rule.', evidence: 'derivation', conceptTokens: [['b']], probes: ['dup-i3'] },
+  { id: 'dup-c4', assertion: 'A fourth claim so the module satisfies the 4-8 claim rule.', evidence: 'derivation', conceptTokens: [['c']], probes: ['dup-i4'] },
 ]
 export default claims
 EOF
-cat > content/state/state-taxonomy/items.ts <<'EOF'
+cat > "$DUP/items.ts" <<'EOF'
 import type { Item } from '../../types'
 const items: Item[] = [
-  { id: 'state-taxonomy-i1', kind: 'claim-recall', primaryClaim: 'state-taxonomy-c1', prompt: 'x' },
-  { id: 'state-taxonomy-i2', kind: 'claim-recall', primaryClaim: 'state-taxonomy-c2', prompt: 'x' },
-  { id: 'state-taxonomy-i3', kind: 'claim-recall', primaryClaim: 'state-taxonomy-c3', prompt: 'x' },
-  { id: 'state-taxonomy-i4', kind: 'claim-recall', primaryClaim: 'state-taxonomy-c4', prompt: 'x' },
+  { id: 'dup-i1', kind: 'claim-recall', primaryClaim: 'dup-c1', prompt: 'x' },
+  { id: 'dup-i2', kind: 'claim-recall', primaryClaim: 'dup-c2', prompt: 'x' },
+  { id: 'dup-i3', kind: 'claim-recall', primaryClaim: 'dup-c3', prompt: 'x' },
+  { id: 'dup-i4', kind: 'claim-recall', primaryClaim: 'dup-c4', prompt: 'x' },
 ]
 export default items
 EOF
-echo "placeholder" > content/state/state-taxonomy/body.mdx
+echo placeholder > "$DUP/body.mdx"
 perl -0pi -e "s/(id: 'state-taxonomy'.*?)status: 'planned'/\${1}status: 'drafted'/s" "$CUR"
 expect_red "two modules claiming the same idea (one-owner rule)" $LINT
-restore "$CUR"; rm -rf content/state/state-taxonomy
+restore "$CUR"
+rm -rf "$DUP"
+[ -d "$STASH" ] && mv "$STASH" "$DUP"
+
+perl -0pi -e "s/explains: 'state-taxonomy-c1'/explains: 'state-taxonomy-c5'/" content/state/state-taxonomy/sim.ts
+expect_red "a sim frame asserting an authored opinion" $LINT
+perl -0pi -e "s/explains: 'state-taxonomy-c5'/explains: 'state-taxonomy-c1'/" content/state/state-taxonomy/sim.ts
 
 echo
 echo "ADR wall (eslint)"
@@ -112,6 +134,7 @@ expect_red "ADR-6: import dagre"        bash -c "printf 'import x from \"dagre\"
 expect_red "ADR-5: import framer-motion" bash -c "printf 'import { motion } from \"framer-motion\"\nexport default motion\n' > $T; npx eslint $T; rc=\$?; rm -f $T; exit \$rc"
 expect_red "ADR-6: import @xyflow/react" bash -c "printf 'import x from \"@xyflow/react\"\nexport default x\n' > $T; npx eslint $T; rc=\$?; rm -f $T; exit \$rc"
 expect_red "ADR-1: import @tanstack/react-query" bash -c "printf 'import x from \"@tanstack/react-query\"\nexport default x\n' > $T; npx eslint $T; rc=\$?; rm -f $T; exit \$rc"
+expect_red "ADR-1: import react-router" bash -c "printf 'import { Link } from \"react-router\"\nexport default Link\n' > $T; npx eslint $T; rc=\$?; rm -f $T; exit \$rc"
 expect_red "ADR-3: idb outside src/data/repo" bash -c "printf 'import { openDB } from \"idb\"\nexport default openDB\n' > $T; npx eslint $T; rc=\$?; rm -f $T; exit \$rc"
 expect_red "ADR-7: ts-fsrs outside the adapter" bash -c "printf 'import { fsrs } from \"ts-fsrs\"\nexport default fsrs\n' > $T; npx eslint $T; rc=\$?; rm -f $T; exit \$rc"
 expect_red "no aggregate of the three axes" bash -c "printf 'export const overallScore = 1\n' > $T; npx eslint $T; rc=\$?; rm -f $T; exit \$rc"
@@ -120,7 +143,45 @@ expect_red "SIM CONTRACT: Math.random() in a sim" bash -c "mkdir -p src/__g__; p
 expect_red "SIM CONTRACT: React imported into a sim" bash -c "mkdir -p src/__g__; printf 'import React from \"react\"\nexport default React\n' > src/__g__/sim.ts; npx eslint src/__g__/sim.ts; rc=\$?; rm -rf src/__g__; exit \$rc"
 
 echo
+echo "budgets"
+expect_red "landing bundle over budget" bash -c "
+  cp .size-limit.json $BACKUP/sl.bak
+  perl -0pi -e 's/\"95 kB\"/\"40 kB\"/' .size-limit.json
+  npx size-limit >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/sl.bak .size-limit.json; exit \$rc"
+
+echo
 echo "the mechanism"
+expect_red "self-graded evidence allowed to move Mastery" bash -c "
+  cp src/domain/axes/mastery.ts $BACKUP/ms.bak
+  perl -0pi -e \"s/if \\(i.grading.kind !== 'auto'\\) return null//\" src/domain/axes/mastery.ts
+  npx vitest run src/domain >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/ms.bak src/domain/axes/mastery.ts; exit \$rc"
+
+expect_red "within-session retries re-rated as fresh evidence" bash -c "
+  cp src/features/review/session.ts $BACKUP/ss.bak
+  perl -0pi -e \"s/export const ratable = \\(a: Answered\\) => !a.rehearsal/export const ratable = (_a: Answered) => true/\" src/features/review/session.ts
+  npx vitest run src/features >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/ss.bak src/features/review/session.ts; exit \$rc"
+
+expect_red "recall gate merely covering the page instead of replacing it" bash -c "
+  cp src/routes/Module.tsx $BACKUP/mod.bak
+  perl -0pi -e \"s/  if \\(inRecall\\) \\{/  if (false) {/\" src/routes/Module.tsx
+  npx playwright test e2e/gate.spec.ts >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/mod.bak src/routes/Module.tsx; exit \$rc"
+
+expect_red "coverage moved by something other than the recall gate" bash -c "
+  cp src/domain/axes/index.ts $BACKUP/ax.bak
+  perl -0pi -e \"s/coverage: existing\\?\\.coverage \\?\\? 'none',/coverage: 'covered',/\" src/domain/axes/index.ts
+  npx vitest run src/domain/axes >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/ax.bak src/domain/axes/index.ts; exit \$rc"
+
+expect_red "a mastery kind graded without its rationale screen" bash -c "
+  cp src/domain/grading/index.ts $BACKUP/gr.bak
+  perl -0pi -e \"s/const score = optOk && whyOk \\? 1 : optOk \\? 0.4 : 0/const score = optOk ? 1 : 0/\" src/domain/grading/index.ts
+  npx vitest run src/domain/grading >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/gr.bak src/domain/grading/index.ts; exit \$rc"
+
 expect_red "prediction gate degraded into a CSS overlay" bash -c "
   cp src/kit/Playground.tsx $BACKUP/pg.bak
   perl -0pi -e \"s/\\(prediction \\? run\\(\\) : null\\)/run()/\" src/kit/Playground.tsx
@@ -136,6 +197,5 @@ expect_red "a claim whose sim contradicts it" bash -c "
   cp $BACKUP/c.bak content/state/state-races/claims.ts; exit \$rc"
 
 echo
-rm -rf "$BACKUP"
 printf '%d gates verified, %d failures\n' "$pass" "$fail"
 exit $((fail > 0))

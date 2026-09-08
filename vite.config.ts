@@ -25,5 +25,21 @@ export default defineConfig({
   build: {
     // Bundle discipline is the app's thesis; make a regression visible in the log.
     chunkSizeWarningLimit: 100,
+    rollupOptions: {
+      output: {
+        /**
+         * ONE CHUNK PER CONTENT MODULE, named for it.
+         *
+         * Without this, every module's `sim`/`claims`/`items`/`body` becomes a
+         * separate hashed chunk and the per-module budget silently measures the
+         * SUM across all built modules instead of one. A budget that measures the
+         * wrong thing is worse than no budget.
+         */
+        manualChunks(id) {
+          const m = id.match(/[/\\]content[/\\][a-z]+[/\\]([a-z0-9-]+)[/\\]/)
+          return m ? `m-${m[1]}` : undefined
+        },
+      },
+    },
   },
 })

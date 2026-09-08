@@ -1,0 +1,105 @@
+Almost everyone who writes JavaScript for a living can recite that the event loop
+"runs tasks, then microtasks, then renders." Almost everyone gets the next question
+wrong, because the recited version leaves out the only part that decides real
+behaviour: *when the browser chooses to render at all.*
+
+## The four callbacks
+
+Inside a single click handler:
+
+```js
+setTimeout(A, 0)
+Promise.resolve().then(B)
+requestAnimationFrame(C)
+console.log(D)
+```
+
+`D` first — that one is not interesting. Nothing queued can run while the call stack
+is non-empty, so every callback above waits for the handler to return.
+
+`B` second. When a task ends, the microtask queue is drained **completely** before
+the next task and before any rendering. That is not a heuristic or a scheduling
+preference; it is a step in the processing model. A promise callback queued in a
+handler beats a timer and a rAF queued in the same handler, every time, on every
+browser.
+
+Then the interesting part. Most engineers answer `C` next, reasoning that
+`requestAnimationFrame` runs "before paint" and is therefore the fast one, whereas
+`setTimeout` is the slow legacy thing. Both halves of that are true and the
+conclusion is still wrong.
+
+## rAF is not early, it is *aligned*
+
+`requestAnimationFrame` callbacks do not run soon. They run **inside the rendering
+steps**, which the browser executes at display cadence — roughly every 16.7ms at
+60Hz. Registering a rAF in the first two milliseconds of a frame does not make it
+run in the first two milliseconds; it makes it run about fifteen milliseconds later,
+when the frame boundary arrives.
+
+`setTimeout(A, 0)`, meanwhile, becomes an eligible **task** on the very next turn of
+the loop. The loop turns as soon as the microtask checkpoint is done.
+
+So `A` runs before `C`. The full order is `D → B → A → C`, and there is exactly one
+paint.
+
+Now change one character. Make it `setTimeout(A, 20)`. The timer is no longer
+eligible before the frame boundary, so the frame goes first and the order becomes
+`D → B → C → A`. Same four APIs, same handler, opposite answer.
+
+That is the actual lesson, and it is the one worth carrying into an interview: **the
+relative order of a timer and a rAF is a race between the timer's delay and the time
+remaining in the current frame.** It is not a property of the two APIs. Anyone who
+states it as a rule — in either direction — is reciting rather than reasoning, and
+the follow-up question ("what would change your answer?") will find that out.
+
+## One frame, one paint
+
+However many callbacks you queue into a frame, the rendering steps run once and
+produce one paint. Queuing ten rAF callbacks does not get you ten frames; it gets you
+ten callbacks inside one frame, all of them competing for the same ~16ms before the
+compositor needs the result.
+
+This is why "just use rAF" is not a performance fix by itself. Moving work into a
+rAF callback does not make the work cheaper — it moves it into the exact window that
+must finish before the browser can show anything, which is usually the worst place
+for it. rAF is for work that *must* be aligned with the frame: reading layout,
+writing a transform, driving an animation you are computing yourself.
+
+## The freeze with no blocking function
+
+The last piece is the one that produces genuinely mystifying bugs.
+
+A microtask that queues another microtask is drained **in the same checkpoint**. The
+checkpoint does not end until the queue is empty, and a self-perpetuating chain never
+empties it. So:
+
+```js
+function tick() { Promise.resolve().then(tick) }   // the page is now frozen
+```
+
+There is no long function here. Every individual callback returns in microseconds. A
+profiler will show you thousands of tiny, blameless microtasks and no long task at
+all. And the page is completely unresponsive, because the loop never reaches the
+rendering steps and never picks up the next input event.
+
+Swap the continuation to a **task** and the freeze disappears entirely:
+
+```js
+function tick() { setTimeout(tick, 0) }            // yields; the page renders
+```
+
+This is the mechanism behind every "chunk your work and yield" recommendation you
+have read, and it is why the yield has to be a task. `scheduler.yield()` exists to
+make that explicit and to keep your continuation at a sensible priority instead of
+the back of the timer queue.
+
+## What to say when you are asked
+
+The event loop shows up in interviews as an ordering puzzle, but the puzzle is the
+setup, not the question. The question is always the follow-up.
+
+Answer the ordering, then say what would change it — that the timer/rAF order is a
+race against the frame boundary, that a promise chain beats both by construction, and
+that one frame means one paint. Then, if you want to end the topic: mention that the
+freeze mode nobody expects is the microtask chain, because it never shows up as a
+long task and so never appears in the place people look first.

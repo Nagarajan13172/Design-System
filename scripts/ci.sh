@@ -8,4 +8,5 @@ echo "==> lint:content";  npx tsx scripts/lint-content.ts
 echo "==> test";          npx vitest run
 echo "==> build";         npx vite build
 echo "==> size";          npx size-limit
+echo "==> e2e";           npx playwright test
 echo "==> gates";         ./scripts/verify-gates.sh

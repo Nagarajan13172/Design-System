@@ -1,0 +1,80 @@
+Here is a bug you have shipped. A dashboard shows an unread count in the sidebar and
+again in the header. Someone reports that the two numbers disagree.
+
+The fix is obvious: one fetch, one copy, put it in a store. You do that, the numbers
+agree, and the ticket closes. Three weeks later a different ticket arrives — the
+count is wrong after the user reads messages on their phone — and it is the same bug
+wearing different clothes, because the first fix answered a question nobody had asked.
+
+## Placement, not library
+
+Almost every state bug in a frontend application is a **placement** mistake: a value
+living somewhere that structurally cannot give it the properties it needs. The
+properties are not opinions, they are mechanics, and there are only a few of them:
+
+- Does it survive a component remount?
+- Is it shared between components, or is each one holding its own copy?
+- Does it survive a reload?
+- Can it be shared by pasting a link?
+- **Does anything ever cause it to be re-read from the source of truth?**
+
+Run the four common placements against those questions and the answer falls out
+without any judgment call. Component state survives nothing and shares nothing. A
+global store survives remounts and is shared, and dies on reload. The URL survives
+reload and is shareable by link. And exactly one placement — treating the value as a
+cache with a freshness policy — answers the last question at all.
+
+That last row is the one that matters here, because for `unreadCount` the last
+question *is* the problem. The count is owned by the server and changed by things
+this tab cannot see: another tab, another device, a background job marking a digest
+as read. No amount of sharing it more carefully within this tab affects that.
+
+So the store fixed disagreement and remount loss — two real properties, neither of
+which was failing in production — and left the freshness column red. It was a right
+answer to the wrong question, and the reason it felt like progress is that the
+symptom people reported happened to be the one the store fixes.
+
+## The taxonomy, and what each row is for
+
+**Server cache.** Anything the server owns. It is a cache, not application state, and
+the only two questions worth asking about it are *how long may this be wrong* and
+*what makes it right again*. Answers like "until the user refocuses the tab", "for 30
+seconds", "when the websocket event arrives" are all fine. "It shouldn't be wrong" is
+not an answer, it is a wish.
+
+**Client UI state.** Things the client alone originates: an open menu, a selected
+row, an optimistic pending flag, a sort order the server has never heard of. These
+have no freshness policy because there is nothing to be stale against.
+
+**URL state.** Anything a user should be able to send to a colleague and have open
+identically: filters, tabs, pagination, a selected entity. Putting it here is what
+makes a view shareable, and it is the cheapest product feature in this list. It is
+also the wrong home for anything that must *not* be shareable — a draft, a token,
+anything with a name in it.
+
+**Form state.** Not-yet-committed edits. The distinguishing property is that it is
+allowed to disagree with the server; that disagreement is the entire point, and
+treating it as a cache produces the classic bug where a background refetch wipes what
+someone was typing.
+
+**Ephemeral state.** Hover, focus, an in-flight animation. If it survived a reload
+that would be a bug.
+
+## Why this is the question interviewers actually ask
+
+"How would you manage this state?" is not a question about libraries, and answering
+it with a library name is the fastest way to signal that you have not separated these
+concerns. Redux, Zustand, Jotai and Context are all answers to *client UI state*.
+None of them has an opinion about freshness, and freshness is where data-heavy
+products actually break.
+
+The strong answer establishes ownership first — who owns this truth, who else can
+change it, and how would this tab find out — and only then reaches for a mechanism.
+That sequence also makes the follow-up questions easy, because once you have said
+"the server owns it and another tab can change it", the interviewer's next question
+("so how does this tab find out?") is one you have already set up.
+
+And it gives you something precise to say about trade-offs, which is what the round
+is scored on: under-invalidating is a correctness bug, over-invalidating is a
+performance bug, so the sane default is to over-invalidate and narrow it with
+measurement. That sentence is worth more than any library name.

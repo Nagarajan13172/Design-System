@@ -102,3 +102,12 @@ body {
 .prose-body p { margin: 0 0 1rem; }
 .prose-body strong { font-weight: 600; color: var(--text); }
 .prose-body code { font-family: var(--font-mono); font-size: 0.875em; background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 0.05em 0.3em; }
+
+/* The module layout: two columns only where there is room. */
+.module-grid { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1280px) {
+  .module-grid { grid-template-columns: minmax(0, 1fr) 17rem; }
+}
+@media (max-width: 1279px) {
+  .module-aside > section { position: static; }
+}

@@ -1,4 +1,4 @@
-import { Link } from 'react-router'
+import { Link } from '@/lib/nav'
 import { MODULES, DOMAINS, BUILT, TOTAL } from 'virtual:manifest-lite'
 import { BUILT_IDS } from 'virtual:module-loader'
 import { DevShell } from './DevShell'

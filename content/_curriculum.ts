@@ -75,8 +75,8 @@ export const CURRICULUM: CurriculumEntry[] = [
   {
     id: 'found-event-loop', domain: 'found', tier: 'MVP',
     title: 'The Event Loop and the Rendering Steps',
-    level: 'foundation', verb: 'explain', status: 'planned',
-    studyMinutes: 45, primitive: 'StateMatrix',
+    level: 'foundation', verb: 'explain', status: 'drafted',
+    studyMinutes: 45, primitive: 'LaneTimeline',
     authorHours: { estimate: 12, actual: null },
     prereqs: [],
     related: [],
@@ -327,7 +327,7 @@ export const CURRICULUM: CurriculumEntry[] = [
   {
     id: 'state-taxonomy', domain: 'state', tier: 'MVP',
     title: 'The Five States: Server Cache, Client UI, URL, Form, Ephemeral',
-    level: 'foundation', verb: 'judge', status: 'planned',
+    level: 'foundation', verb: 'judge', status: 'drafted',
     studyMinutes: 35, primitive: 'StateMatrix',
     authorHours: { estimate: 12, actual: null },
     prereqs: [],

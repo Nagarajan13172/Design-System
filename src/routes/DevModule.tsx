@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router'
+import { useParams } from '@/lib/nav'
 import { loadModule, type LoadedModule } from 'virtual:module-loader'
 import { FULL } from 'virtual:manifest-full'
 import { MASTERY_KINDS } from '@content/types'
@@ -15,16 +15,23 @@ import { DevShell } from './DevShell'
  */
 export default function DevModule() {
   const { moduleId = '' } = useParams()
-  const [mod, setMod] = useState<LoadedModule | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  // The loaded payload carries the id it belongs to, so switching modules needs no
+  // synchronous reset (which would cascade a render inside the effect).
+  const [loaded, setLoaded] = useState<{ id: string; mod: LoadedModule | null; error: string | null }>(
+    { id: '', mod: null, error: null })
   const entry = FULL.find(m => m.id === moduleId)
 
   useEffect(() => {
     let live = true
-    setMod(null); setError(null)
-    loadModule(moduleId).then(m => { if (live) setMod(m) }, e => { if (live) setError(String(e.message ?? e)) })
+    loadModule(moduleId).then(
+      m => { if (live) setLoaded({ id: moduleId, mod: m, error: null }) },
+      e => { if (live) setLoaded({ id: moduleId, mod: null, error: String(e.message ?? e) }) },
+    )
     return () => { live = false }
   }, [moduleId])
+
+  const mod = loaded.id === moduleId ? loaded.mod : null
+  const error = loaded.id === moduleId ? loaded.error : null
 
   if (error) return <DevShell title={moduleId}><p style={{ color: 'var(--d-error)' }}>{error}</p></DevShell>
   if (!mod || !entry) return <DevShell title={moduleId}><p style={{ color: 'var(--text-faint)' }}>loading…</p></DevShell>

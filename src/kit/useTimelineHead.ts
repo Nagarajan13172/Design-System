@@ -12,12 +12,16 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * the caller renders every annotation composited at once instead.
  */
 export function useTimelineHead(frameCount: number, opts?: { fps?: number }) {
-  const [frame, setFrame] = useState(0)
+  const [rawFrame, setFrame] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState(1)
   const raf = useRef(0)
   const acc = useRef(0)
   const last = useRef(0)
+  // Derived, not stored: clamping in an effect would setState during render's
+  // commit and cascade. A shrinking timeline just clamps on the way out.
+  const frame = Math.max(0, Math.min(rawFrame, frameCount - 1))
+  const frameRef = useRef(0)
   const reduced = useReducedMotion()
   const fps = opts?.fps ?? 2 // stages are semantic beats, not smooth motion
 
@@ -26,6 +30,8 @@ export function useTimelineHead(frameCount: number, opts?: { fps?: number }) {
   const step = useCallback((d: number) => { setPlaying(false); setFrame(f => clamp(f + d)) }, [clamp])
   const seek = useCallback((n: number) => { setPlaying(false); setFrame(clamp(n)) }, [clamp])
   const reset = useCallback(() => { setPlaying(false); setFrame(0) }, [])
+
+  useEffect(() => { frameRef.current = frame }, [frame])
 
   useEffect(() => {
     if (!playing || reduced) return
@@ -37,10 +43,10 @@ export function useTimelineHead(frameCount: number, opts?: { fps?: number }) {
         const per = 1000 / fps
         if (acc.current >= per) {
           acc.current = 0
-          setFrame(f => {
-            if (f >= frameCount - 1) { setPlaying(false); return f }
-            return f + 1
-          })
+          // Decide OUTSIDE the updater: calling setState from inside one triggers
+          // cascading renders and is a React purity violation.
+          if (frameRef.current >= frameCount - 1) setPlaying(false)
+          else setFrame(f => f + 1)
         }
       }
       last.current = t
@@ -49,8 +55,6 @@ export function useTimelineHead(frameCount: number, opts?: { fps?: number }) {
     raf.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf.current)
   }, [playing, speed, frameCount, fps, reduced])
-
-  useEffect(() => { if (frame > frameCount - 1) setFrame(clamp(frame)) }, [frameCount, frame, clamp])
 
   return { frame, playing, speed, reduced, setSpeed, play: () => setPlaying(p => !p), step, seek, reset }
 }

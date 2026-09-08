@@ -184,18 +184,28 @@ for (const [id, { meta, claims, items }] of loaded) {
     if (i.secondaryClaim && !claimIds.has(i.secondaryClaim)) fail('coverage', id, `item \`${i.id}\` references unknown secondaryClaim \`${i.secondaryClaim}\``)
   }
 
-  // 8. item kind must match the module's objective verb
+  // 8. item kind vs the module's objective verb.
+  // `predict` is exempt: it is the figure's own gate and exists on every module.
+  // For other mastery kinds this is a WARNING, not an error — masteryContribution()
+  // already refuses them at runtime when the verb is not a judgment verb, so the
+  // author's real need is to know the items will not move Mastery, not to be blocked.
   const isJudgmentVerb = (JUDGMENT_VERBS as readonly string[]).includes(m.verb)
-  for (const i of items) {
-    if ((MASTERY_KINDS as readonly string[]).includes(i.kind) && !isJudgmentVerb) {
-      fail('verb-binding', id, `item \`${i.id}\` is a mastery kind (${i.kind}) but the module's verb is '${m.verb}'. Mastery evidence requires a judgment verb (${JUDGMENT_VERBS.join('/')}).`)
+  if (!isJudgmentVerb) {
+    const affected = items.filter(i => i.kind !== 'predict' && (MASTERY_KINDS as readonly string[]).includes(i.kind))
+    if (affected.length) {
+      warn('verb-binding', id, `${affected.length} mastery-kind item(s) on a '${m.verb}' module will not move Mastery (only ${JUDGMENT_VERBS.join('/')} do). They still schedule and still count for Coverage.`)
     }
   }
 
-  // 9. authored-heuristic claims may not have a sim and may not produce mastery evidence
+  // 9. An authored-heuristic claim may not be EXPLAINED BY A SIM FRAME, and may not
+  // produce mastery evidence. Checked per claim, not per module: a module may
+  // legitimately mix measured claims (which need a sim) with one authored opinion
+  // (which must stay prose, because a test asserting a number the author invented
+  // tests nothing).
+  const explained = new Set((loaded.get(id)?.timeline?.frames ?? []).map(f => f.explains))
   for (const c of claims) {
     if (c.evidence !== 'authored-heuristic') continue
-    if (loaded.get(id)?.timeline) fail('heuristic', id, `claim \`${c.id}\` is authored-heuristic but the module has a sim. A test asserting a number the author invented tests nothing.`)
+    if (explained.has(c.id)) fail('heuristic', id, `claim \`${c.id}\` is authored-heuristic but a sim frame explains it. Either it is measurable (change the evidence) or the frame is asserting an opinion.`)
     const masteryProbes = items.filter(i => i.primaryClaim === c.id && (MASTERY_KINDS as readonly string[]).includes(i.kind))
     if (masteryProbes.length) fail('heuristic', id, `claim \`${c.id}\` is authored-heuristic but is probed by mastery items: ${masteryProbes.map(i => i.id).join(', ')}`)
   }

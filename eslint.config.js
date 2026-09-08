@@ -1,5 +1,7 @@
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
+import reactHooks from 'eslint-plugin-react-hooks'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
 
 /**
  * THE ADR WALL.
@@ -26,7 +28,7 @@ const AGGREGATE_NAMES = /^(overall|overallScore|overallProgress|totalProgress|to
 
 const LIBRARY_BANS = [
   // ADR-1 — React Router v7 in LIBRARY mode. There is no server.
-  ['react-router-dom', 'ADR-1: import from `react-router` (library mode). react-router-dom is the data-router surface we rejected.'],
+  ...['react-router', 'react-router-dom'].map(n => [n, 'ADR-1 (revised): we ship our own ~130-line router in src/lib/router.tsx. react-router v7 is 34kB gz \u2014 a third of the landing budget \u2014 for twelve static routes with no loaders. Import navigation from @/lib/nav.']),
   ['swr', 'ADR-1: no server-cache library. There is no server; reads are local IDB cursors.'],
   // ADR-2 — Zustand + immer is the only global store.
   ...['redux', '@reduxjs/toolkit', 'jotai', 'valtio', 'recoil', 'mobx']
@@ -95,7 +97,11 @@ export default tseslint.config(
 
   {
     files: ['src/**/*.{ts,tsx}', 'content/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooks, 'jsx-a11y': jsxA11y },
     rules: {
+      ...reactHooks.configs.recommended.rules,
+      // An app that teaches accessibility and fails it is dead with this audience.
+      ...jsxA11y.flatConfigs.recommended.rules,
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-restricted-imports': restrict(),
       'no-restricted-syntax': ['error', NO_AGGREGATE],

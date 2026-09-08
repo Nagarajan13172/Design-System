@@ -1,4 +1,4 @@
-import { Link } from 'react-router'
+import { Link } from '@/lib/nav'
 import type { ReactNode } from 'react'
 
 /** Chrome for the /dev routes. DEV ONLY — never shipped to a learner. */
