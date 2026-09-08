@@ -53,6 +53,7 @@ export function LaneTimeline({
 
   return (
     <svg viewBox={`0 0 ${W} ${h}`} className="w-full h-auto" role="img" aria-labelledby={labelledBy}
+         aria-label={labelledBy ? undefined : 'timeline of lanes over time'}
          style={{ fontFamily: 'var(--font-mono)' }}>
       <defs>
         <pattern id={`${uid}-hatch-stale`} width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">

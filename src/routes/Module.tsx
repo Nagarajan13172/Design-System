@@ -110,6 +110,7 @@ export default function Module() {
         <div>
           <Playground
             meta={mod.meta} setup={entry.figureSetup} run={mod.sim.run} gateItem={gateItem}
+            renderSurface={mod.renderSurface}
             now={() => Date.now()}
             store={predictionStore}
             onCommit={(_r, correct) => {
@@ -213,8 +214,8 @@ function Shell({ title, children }: { title: string; children: React.ReactNode }
         <Link to="/review" className="font-mono text-[12px]" style={{ color: 'var(--text)' }}>fesd</Link>
         <span style={{ color: 'var(--text-dim)' }}>{title}</span>
         <nav className="ml-auto flex gap-4" style={{ color: 'var(--text-dim)' }}>
-          <Link to="/progress" style={{ color: 'var(--text-dim)' }}>progress</Link>
-          <Link to="/review" style={{ color: 'var(--text-dim)' }}>review</Link>
+          <Link to="/progress" className="nav-link" style={{ color: 'var(--text-dim)' }}>progress</Link>
+          <Link to="/review" className="nav-link" style={{ color: 'var(--text-dim)' }}>review</Link>
         </nav>
       </header>
       <main className="px-5 py-8 mx-auto" style={{ maxWidth: '72rem' }}>{children}</main>

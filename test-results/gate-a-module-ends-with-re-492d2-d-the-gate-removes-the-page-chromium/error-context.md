@@ -91,7 +91,7 @@ Call log:
     - paragraph: Interviewers ask about the typeahead because it is the smallest problem that contains a genuine concurrency question, and they are listening for three things.
     - paragraph: First, whether you distinguish arrival order from dispatch order at all, or whether you reach straight for a library. Second, whether you can name what the failure looks like to the user — no error, no log, silent wrongness — because that is what makes it dangerous and it is what separates someone who has debugged this from someone who has read about it. Third, whether you quantify. "I'd add a debounce" is a weak answer. "I'd sequence, because a debounce only narrows the window and the window is a ratio to the latency tail I don't control — on a slow network the same debounce is ten times worse" is the answer that ends the topic.
     - paragraph: And when they push — and they will — the follow-up is almost always about cancellation. Have the distinction ready.
-  - heading "drills · 1/6" [level=2]
+  - heading "drills · 1/9" [level=2]
   - paragraph: You raise the debounce from 300ms to 800ms. What happens to the stale-render rate, and at what threshold does the trade stop being worth it?
   - group "Which way does it move?":
     - text: Which way does it move?

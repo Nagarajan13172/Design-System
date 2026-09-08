@@ -23,5 +23,6 @@
       "@sim/*": ["src/sim/*"]
     }
   },
-  "include": ["src", "content", "scripts", "vite", "*.config.ts"]
+  "include": ["src", "content", "scripts", "vite", "*.config.ts"],
+  "exclude": ["content/**/snippets/src/**"]
 }

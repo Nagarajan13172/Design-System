@@ -122,6 +122,12 @@ export interface Claim {
    * gamed by keyword stuffing, which is exactly why it is evidence and not a grade.
    */
   conceptTokens: string[][]
+  /**
+   * The plausible wrong belief this claim displaces. Feeds mcq-rationale
+   * generation: the useful distractor is not a random alternative, it is the model
+   * a competent engineer actually holds.
+   */
+  misconception?: string
   /** Item ids that may probe this claim. Drawn at session-build time, never repeating the previous kind. */
   probes: ItemId[]
 }
@@ -252,6 +258,59 @@ export interface StateMatrixState {
   cursor?: { row: string; col: string }
   /** A single measured quantity reported beside the grid. */
   meter?: { label: string; value: number; max: number; unit?: string }
+}
+
+export interface NodeGraphState {
+  nodes: { id: string; label: string; x: number; y: number; w?: number; h?: number; group?: string; badge?: string; shape?: 'rect' | 'round' | 'diamond' }[]
+  edges: { id: string; from: string; to: string; label?: string; kind?: 'data' | 'control' | 'import' | 'retain' | 'contains' }[]
+  nodeState: Record<string, 'idle' | 'active' | 'visited' | 'blocked' | 'flagged' | 'dim'>
+  edgeState?: Record<string, 'idle' | 'active' | 'blocked' | 'dim'>
+  /** The propagation wave: ONE animated channel, expressed as a radius from a source. */
+  wave?: { from: string; radius: number }
+  /** A highlighted route through the graph, for "what happens next" narratives. */
+  activePath?: string[]
+}
+
+export interface Plot2DState {
+  series: {
+    id: string; label: string
+    kind: 'line' | 'step' | 'bar' | 'hist' | 'scatter' | 'area'
+    points: { x: number; y: number }[]
+    tone?: 'accent' | 'good' | 'bad' | 'ghost' | 'neutral'
+  }[]
+  xAxis: { label: string; unit?: string; scale?: 'linear' | 'log'; min?: number; max?: number }
+  yAxis: { label: string; unit?: string; scale?: 'linear' | 'log'; min?: number; max?: number }
+  /** Horizontal or vertical reference lines: budgets, thresholds, percentile marks. */
+  thresholds?: { id: string; axis: 'x' | 'y'; value: number; label: string; tone?: 'good' | 'bad' | 'neutral' }[]
+  markers?: { id: string; x: number; y: number; label: string; tone?: 'good' | 'bad' | 'neutral' }[]
+}
+
+/** A pre-tokenized code block. Shiki runs at BUILD time; zero highlighter bytes ship. */
+export interface CodeToken { text: string; cls: string }
+
+export interface CodeStageState {
+  blocks: { id: string; label?: string; lines: CodeToken[][] }[]
+  /** cls -> the light/dark colour pair, emitted once per block set by `pnpm build:code`. */
+  palette?: Record<string, { light: string; dark: string }>
+  /** Which lines to highlight, and how. */
+  highlight?: { blockId: string; lines: number[]; tone: 'good' | 'bad' | 'neutral' }[]
+  /** `diff` mode: which block is A, which is B, and which lines changed. */
+  view?: 'A' | 'B' | 'diff'
+  changed?: { blockId: string; lines: number[] }[]
+}
+
+/**
+ * LiveSurface renders REAL DOM and overlays annotations on it.
+ * Its "timeline" is a sequence of PROP STATES rather than precomputed geometry,
+ * because getBoundingClientRect values do not exist until after layout — see the
+ * documented exception in the primitive itself.
+ */
+export interface LiveSurfaceState {
+  /** Props handed to the author-supplied render function. */
+  props: Record<string, unknown>
+  /** Anchors resolved post-layout, by CSS selector into the rendered subtree. */
+  overlays: { id: string; kind: 'box' | 'label' | 'order' | 'path'; selector: string; text?: string; order?: number; tone?: 'good' | 'bad' | 'neutral' }[]
+  counters?: { label: string; value: string | number }[]
 }
 
 export interface Rng { (): number }

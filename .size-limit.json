@@ -6,15 +6,21 @@
     "gzip": true
   },
   {
-    "name": "one module — state-races, incremental over the landing chunk",
+    "name": "one module with code drills — state-races",
     "path": "dist/assets/m-state-races-*.js",
     "limit": "60 kB",
     "gzip": true
   },
   {
-    "name": "one module — found-event-loop",
-    "path": "dist/assets/m-found-event-loop-*.js",
+    "name": "one module with a LiveSurface figure — incl-a11y-tree",
+    "path": "dist/assets/m-incl-a11y-tree-*.js",
     "limit": "60 kB",
+    "gzip": true
+  },
+  {
+    "name": "the module route itself (primitives + drills + recall gate)",
+    "path": "dist/assets/Module-*.js",
+    "limit": "40 kB",
     "gzip": true
   }
 ]

@@ -10,9 +10,9 @@ import type { PrimitiveProps } from './types'
  * cell fill is the second, and there is never a third.
  */
 const TONE = {
-  pass: { bg: 'color-mix(in oklch, var(--d-work) 16%, transparent)', fg: 'var(--d-work)', mark: '✓' },
-  fail: { bg: 'color-mix(in oklch, var(--d-error) 16%, transparent)', fg: 'var(--d-error)', mark: '✕' },
-  partial: { bg: 'color-mix(in oklch, var(--d-blocked) 16%, transparent)', fg: 'var(--d-blocked)', mark: '~' },
+  pass: { bg: 'color-mix(in oklch, var(--d-work) 16%, transparent)', fg: 'var(--d-work-text)', mark: '✓' },
+  fail: { bg: 'color-mix(in oklch, var(--d-error) 16%, transparent)', fg: 'var(--d-error-text)', mark: '✕' },
+  partial: { bg: 'color-mix(in oklch, var(--d-blocked) 16%, transparent)', fg: 'var(--d-blocked-text)', mark: '~' },
   na: { bg: 'transparent', fg: 'var(--text-faint)', mark: '–' },
   active: { bg: 'var(--accent-bg)', fg: 'var(--accent)', mark: '' },
   empty: { bg: 'transparent', fg: 'var(--text-faint)', mark: '' },

@@ -17,14 +17,16 @@ export function DevShell({ title, children, aside }: { title: string; children: 
               style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>dev</span>
         <span style={{ color: 'var(--text-dim)' }}>{title}</span>
         <nav className="ml-auto flex items-center gap-4">
-          <Link to="/dev/primitives" style={{ color: 'var(--text-dim)' }}>primitives</Link>
+          <Link to="/dev/primitives" className="nav-link" style={{ color: 'var(--text-dim)' }}>primitives</Link>
           <button onClick={toggle} style={{ color: 'var(--text-dim)' }} aria-label="toggle theme">theme</button>
         </nav>
       </header>
-      <div className="px-5 py-6 mx-auto" style={{ maxWidth: '78rem' }}>
+      {/* A real <main> landmark: the dev pages had none, which the a11y gate found
+          the moment it waited on one. */}
+      <main className="px-5 py-6 mx-auto" style={{ maxWidth: '78rem' }}>
         {aside}
         {children}
-      </div>
+      </main>
     </div>
   )
 }

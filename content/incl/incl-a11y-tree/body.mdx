@@ -1,0 +1,76 @@
+A search field with a placeholder, and a submit button with an icon. It looks
+complete. Every control is visible, every control is labelled, and a sighted user
+would not hesitate for a second.
+
+A screen reader announces: *"edit, blank"* and then *"button"*.
+
+## The tree is not the DOM
+
+Assistive technology does not read your markup. The browser builds a second
+structure from it — the **accessibility tree** — and that is what gets read. Nodes
+in it have a role, a name, a state, and a value, and each of those is *computed*
+rather than copied.
+
+When the visible text and the computed name happen to coincide — a plain `<button>`
+that says Save — the distinction never surfaces, and you can work for years without
+noticing there are two structures. The failures all live in the gap between them.
+
+## Where the name comes from
+
+The accessible name computation resolves in a defined order. Simplified to the
+branches people actually hit:
+
+1. `aria-labelledby`
+2. `aria-label`
+3. a native `<label for>` (or a wrapping label)
+4. the element's own text content
+5. `placeholder` or `title`
+
+Two things follow immediately.
+
+**A placeholder is the last resort.** It works — right up until the user types. The
+moment the field has a value the placeholder is gone from the screen and gone from
+the name, so the only label a screen reader user had disappears exactly when they are
+mid-task and most need it. That is a worse failure than having no label at all,
+because it passes a cursory check and fails during use.
+
+**`aria-hidden` removes a node from the tree entirely.** Not "hides it visually" —
+`display: none` does that, and it removes the node from the tree as a side effect.
+`aria-hidden="true"` leaves the element on screen and takes it out of the tree. So
+wrapping the only text inside an icon button in `aria-hidden` produces a control that
+is visibly labelled and announces as nothing at all.
+
+The fix is not `aria-hidden` plus an `aria-label` bolted on top. It is to keep the
+text in the tree and hide it visually — a clip-rect utility class — so the name comes
+from content, which is the branch least likely to drift out of sync with what the
+button actually does.
+
+## Three properties, failing independently
+
+The last thing worth separating: **naming, reachability and order are three different
+questions.**
+
+A control can be perfectly named and unreachable, because it is a `<div>` with a
+click handler and no `tabindex`. It can be named and reachable and reached in a
+nonsensical sequence, because tab order follows the DOM and CSS reordered the visual
+layout underneath it — grid `order`, `flex-direction: row-reverse`, absolute
+positioning. Nothing about a correct `aria-label` says anything about either.
+
+This is why "add ARIA labels and check colour contrast" is a weak answer. It fixes
+one of the three, and it is the one that is easiest to check.
+
+## What to say when you are asked
+
+"How would you make this accessible?" is a filter question, and what is being filtered
+is *when* accessibility enters your reasoning. Raising it while designing the
+component API is a senior signal; producing a checklist at minute forty is not.
+
+Say that you check what the accessibility tree actually received rather than what the
+markup says — the name, the role, the state — because those are computed and can
+disagree with the visual. Name the placeholder trap and the `aria-hidden` own-goal,
+because both are specific and both are things people have shipped. Then separate
+naming from focus order, and say that a virtualized list or a reordered grid needs
+the second one designed deliberately.
+
+And reach for native elements first. Every branch of the name computation above is
+one you do not have to think about when the element is a `<button>` with text in it.

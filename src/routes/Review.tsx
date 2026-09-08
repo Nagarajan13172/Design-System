@@ -42,7 +42,7 @@ export default function Review() {
           <span title="A day counts if you graded a due card — or if nothing was due.">
             streak <span className="font-mono" style={{ color: hydrated && streak > 0 ? 'var(--accent)' : 'var(--text-faint)' }}>{streak}</span>
           </span>
-          <Link to="/dev" style={{ color: 'var(--text-dim)' }}>dev</Link>
+          <Link to="/dev" className="nav-link" style={{ color: 'var(--text-dim)' }}>dev</Link>
         </nav>
       </header>
 
@@ -85,7 +85,7 @@ function Deck({ deck, summary, onStart }: { deck: unknown[] | null; summary: Ret
         <p style={{ color: 'var(--text-dim)' }}>
           Your streak is safe — a day counts when nothing was due, because punishing the
           scheduler's own success would be absurd. {BUILT} of {TOTAL} modules are built;
-          come back tomorrow, or <Link to="/dev" style={{ color: 'var(--accent)' }}>read one</Link>.
+          come back tomorrow, or <Link to="/dev" className="nav-link" style={{ color: 'var(--accent)' }}>read one</Link>.
         </p>
       </div>
     )

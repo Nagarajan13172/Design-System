@@ -91,7 +91,7 @@ const NO_AGGREGATE = {
 }
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'content/_generated', 'coverage'] },
+  { ignores: ['dist', 'node_modules', 'content/_generated', 'coverage', 'content/**/snippets/src/**', 'test-results', 'playwright-report'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
 

@@ -18,6 +18,8 @@ export interface PlaygroundProps {
   meta: ModuleMeta
   setup: string
   run: (params?: Record<string, unknown>) => Timeline<unknown>
+  /** LiveSurface modules only: the author's real-DOM render function. */
+  renderSurface?: (props: Record<string, unknown>) => React.ReactNode
   /** The `predict` item backing this figure, if the module authored one. */
   gateItem?: Item
   store?: PredictionStore
@@ -25,7 +27,7 @@ export interface PlaygroundProps {
   now?: () => number
 }
 
-export function Playground({ meta, setup, run, gateItem, store, onCommit, now = () => 0 }: PlaygroundProps) {
+export function Playground({ meta, setup, run, renderSurface, gateItem, store, onCommit, now = () => 0 }: PlaygroundProps) {
   const [s] = useState<PredictionStore>(() => store ?? createMemoryStore())
   const [prediction, setPrediction] = useState<PredictionRecord | undefined>(() => s.get(meta.figure.id))
   const [verdict, setVerdict] = useState<{ correct: boolean; explanation?: string } | null>(null)
@@ -94,7 +96,8 @@ export function Playground({ meta, setup, run, gateItem, store, onCommit, now = 
           <>
             {/* The scaffold renders so the learner can see WHAT they are predicting
                 about — but it carries no data. */}
-            <Figure primitive={meta.figure.primitive} state={null} annotations={[]} labelledBy={`${meta.figure.id}-q`} />
+            <Figure primitive={meta.figure.primitive} renderSurface={renderSurface}
+                    state={null} annotations={[]} labelledBy={`${meta.figure.id}-q`} />
             <div className="mt-4">
               <PredictionGate figure={meta.figure} options={gateOptions(gateItem)} onCommit={commit} now={now} />
             </div>
@@ -103,6 +106,7 @@ export function Playground({ meta, setup, run, gateItem, store, onCommit, now = 
           <>
             <Figure
               primitive={meta.figure.primitive}
+              renderSurface={renderSurface}
               state={shownState ?? null}
               annotations={annotations}
               ghost={timeline?.ghost?.frames.at(-1)?.state ?? null}

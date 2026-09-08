@@ -3,6 +3,7 @@ import { Link } from '@/lib/nav'
 import { MODULES } from 'virtual:manifest-lite'
 import { BUILT_IDS, loadModule } from 'virtual:module-loader'
 import { moduleAxes, reviewForecast, calibration, type ModuleAxes, type CalibrationPoint } from '@/domain/axes'
+import { Plot2D } from '@/primitives/Plot2D'
 
 /**
  * /progress — THREE AXES, THREE UNITS, THREE VISUAL LANGUAGES.
@@ -44,7 +45,7 @@ export default function Progress() {
       <header className="flex items-center gap-4 px-5 h-11 border-b" style={{ borderColor: 'var(--border)' }}>
         <Link to="/review" className="font-mono text-[12px]" style={{ color: 'var(--text)' }}>fesd</Link>
         <span style={{ color: 'var(--text-dim)' }}>progress</span>
-        <nav className="ml-auto"><Link to="/review" style={{ color: 'var(--text-dim)' }}>review</Link></nav>
+        <nav className="ml-auto"><Link to="/review" className="nav-link" style={{ color: 'var(--text-dim)' }}>review</Link></nav>
       </header>
 
       <main className="px-5 py-10 mx-auto" style={{ maxWidth: '52rem' }}>
@@ -129,43 +130,53 @@ export default function Progress() {
   )
 }
 
-/** Hand-rolled SVG scatter with the y=x line. No chart library (see the cut list). */
+/**
+ * Both instruments render from the shared Plot2D primitive — its SECOND real client,
+ * which is what lets the kit declare it validated. It also deleted ~60 lines of
+ * bespoke SVG that duplicated the axis and scale logic.
+ */
 function Calibration({ points }: { points: CalibrationPoint[] }) {
-  const W = 220, H = 220, P = 28
-  const x = (v: number) => P + v * (W - P * 2)
-  const y = (v: number) => H - P - v * (H - P * 2)
   if (!points.length) {
     return <p style={{ color: 'var(--text-faint)' }}>Nothing to plot yet — a module needs both a confidence rating and enough mastery evidence.</p>
   }
+  const over = points.filter(p => p.confidence > p.mastery + 0.15)
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img"
-         aria-label={`calibration: ${points.length} modules plotted, ${points.filter(p => p.confidence > p.mastery).length} rated above measured mastery`}>
-      <line x1={x(0)} y1={y(0)} x2={x(1)} y2={y(1)} stroke="var(--border-strong)" strokeDasharray="3 3" />
-      <line x1={P} y1={H - P} x2={W - P} y2={H - P} stroke="var(--border)" />
-      <line x1={P} y1={P} x2={P} y2={H - P} stroke="var(--border)" />
-      <text x={W / 2} y={H - 6} fontSize="9" fill="var(--text-faint)" textAnchor="middle">measured mastery →</text>
-      <text x={8} y={H / 2} fontSize="9" fill="var(--text-faint)" transform={`rotate(-90 8 ${H / 2})`} textAnchor="middle">confidence →</text>
-      {points.map(p => (
-        <circle key={p.moduleId} cx={x(p.mastery)} cy={y(p.confidence)} r="3.5"
-                fill={p.confidence > p.mastery + 0.15 ? 'var(--d-blocked)' : 'var(--accent)'}>
-          <title>{p.moduleId}</title>
-        </circle>
-      ))}
-    </svg>
+    <div style={{ maxWidth: 420 }}>
+      <Plot2D
+        annotations={[]}
+        state={{
+          xAxis: { label: 'measured mastery', min: 0, max: 1 },
+          yAxis: { label: 'confidence', min: 0, max: 1 },
+          series: [
+            // The y=x reference: over it means rated solid where mastery is unproven.
+            { id: 'parity', label: 'y = x', kind: 'line', tone: 'ghost', points: [{ x: 0, y: 0 }, { x: 1, y: 1 }] },
+            { id: 'modules', label: 'modules', kind: 'scatter', tone: 'accent', points: points.map(p => ({ x: p.mastery, y: p.confidence })) },
+          ],
+        }}
+      />
+      <p className="mt-1 text-[12px]" style={{ color: over.length ? 'var(--d-blocked)' : 'var(--text-faint)' }}>
+        {over.length
+          ? `${over.length} module${over.length === 1 ? '' : 's'} rated well above measured mastery.`
+          : 'Confidence is tracking measurement.'}
+      </p>
+    </div>
   )
 }
 
 function Forecast({ buckets }: { buckets: number[] }) {
-  const max = Math.max(1, ...buckets)
+  const total = buckets.reduce((s, v) => s + v, 0)
   return (
-    <div className="flex items-end gap-px" style={{ height: 56 }}
-         role="img" aria-label={`review forecast: ${buckets.reduce((s, v) => s + v, 0)} cards due over 30 days`}>
-      {buckets.map((n, i) => (
-        <div key={i} title={`day ${i}: ${n}`} style={{
-          flex: 1, height: `${(n / max) * 100}%`, minHeight: n ? 2 : 0,
-          background: i === 0 ? 'var(--d-blocked)' : 'var(--accent)', opacity: 0.8,
-        }} />
-      ))}
+    <div style={{ maxWidth: 560 }}>
+      <Plot2D
+        annotations={[]}
+        state={{
+          xAxis: { label: 'days from today', min: 0, max: Math.max(1, buckets.length - 1) },
+          yAxis: { label: 'cards due' },
+          series: [{ id: 'due', label: 'due', kind: 'bar', tone: 'accent', points: buckets.map((y, x) => ({ x, y })) }],
+          thresholds: buckets[0] ? [{ id: 'today', axis: 'x', value: 0, label: `${buckets[0]} overdue`, tone: 'bad' }] : [],
+        }}
+      />
+      <p className="mt-1 text-[12px]" style={{ color: 'var(--text-faint)' }}>{total} cards over the next {buckets.length} days.</p>
     </div>
   )
 }

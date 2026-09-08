@@ -151,6 +151,22 @@ expect_red "landing bundle over budget" bash -c "
   cp $BACKUP/sl.bak .size-limit.json; exit \$rc"
 
 echo
+echo "the kit"
+expect_red "an ambiguous cloze blank" bash -c "
+  cp content/state/state-races/snippets/manifest.ts $BACKUP/mf.bak
+  perl -0pi -e \"s/\\{ id: 'b1', token: 'latest', occurrence: 2 \\}/{ id: 'b1', token: 'latest' }/\" content/state/state-races/snippets/manifest.ts
+  npx tsx scripts/build-code.ts >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/mf.bak content/state/state-races/snippets/manifest.ts
+  npx tsx scripts/build-code.ts >/dev/null 2>&1
+  exit \$rc"
+
+expect_red "a serious axe violation on the primitive gallery" bash -c "
+  cp src/styles/theme.css $BACKUP/th.bak
+  perl -0pi -e \"s/--text-faint:oklch\\(50% 0.010 265\\)/--text-faint:oklch(88% 0.010 265)/\" src/styles/theme.css
+  npx playwright test e2e/a11y.spec.ts >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/th.bak src/styles/theme.css; exit \$rc"
+
+echo
 echo "the mechanism"
 expect_red "self-graded evidence allowed to move Mastery" bash -c "
   cp src/domain/axes/mastery.ts $BACKUP/ms.bak

@@ -24,7 +24,7 @@
   --border-strong: oklch(82% 0.008 265);
   --text:      oklch(24% 0.012 265);
   --text-dim:  oklch(48% 0.010 265);
-  --text-faint:oklch(64% 0.008 265);
+  --text-faint:oklch(50% 0.010 265);
   --accent:    oklch(52% 0.19 258);
   --accent-bg: oklch(95% 0.03 258);
 
@@ -38,6 +38,12 @@
   --d-error:   oklch(56% 0.19 25);
   --d-stale:   oklch(56% 0.19 25);
   --d-ghost:   oklch(78% 0.012 265);
+  /* Text-on-tint variants. The diagram colours are tuned for strokes and fills on
+     the page background; used as TEXT on their own 14-16% tint they fall under
+     4.5:1, which axe catches. These are the same hues, darkened to clear it. */
+  --d-work-text:    oklch(42% 0.13 155);
+  --d-blocked-text: oklch(45% 0.14 55);
+  --d-error-text:   oklch(45% 0.19 25);
   color-scheme: light;
 }
 
@@ -50,7 +56,7 @@
     --border-strong: oklch(38% 0.012 265);
     --text:      oklch(94% 0.004 265);
     --text-dim:  oklch(72% 0.008 265);
-    --text-faint:oklch(56% 0.008 265);
+    --text-faint:oklch(70% 0.010 265);
     --accent:    oklch(72% 0.15 258);
     --accent-bg: oklch(28% 0.05 258);
     --d-network: oklch(72% 0.13 250);
@@ -68,11 +74,12 @@
 :root[data-theme="dark"] {
   --bg: oklch(17% 0.006 265); --surface: oklch(20.5% 0.007 265); --raised: oklch(23% 0.008 265);
   --border: oklch(29% 0.009 265); --border-strong: oklch(38% 0.012 265);
-  --text: oklch(94% 0.004 265); --text-dim: oklch(72% 0.008 265); --text-faint: oklch(56% 0.008 265);
+  --text: oklch(94% 0.004 265); --text-dim: oklch(72% 0.008 265); --text-faint: oklch(70% 0.010 265);
   --accent: oklch(72% 0.15 258); --accent-bg: oklch(28% 0.05 258);
   --d-network: oklch(72% 0.13 250); --d-work: oklch(72% 0.12 155); --d-blocked: oklch(76% 0.14 55);
   --d-paint: oklch(72% 0.14 300); --d-idle: oklch(38% 0.01 265); --d-error: oklch(70% 0.17 25);
   --d-stale: oklch(70% 0.17 25); --d-ghost: oklch(36% 0.01 265);
+  --d-work-text: oklch(80% 0.13 155); --d-blocked-text: oklch(84% 0.13 55); --d-error-text: oklch(78% 0.15 25);
   color-scheme: dark;
 }
 
@@ -110,4 +117,15 @@ body {
 }
 @media (max-width: 1279px) {
   .module-aside > section { position: static; }
+}
+
+/* Inline links inside running text must be distinguishable WITHOUT colour
+   (WCAG 1.4.1). Underline them; nav links and buttons opt out via .nav-link,
+   because there the surrounding context already marks them as controls. */
+p a:not(.nav-link),
+li a:not(.nav-link),
+.prose-body a:not(.nav-link),
+dd a:not(.nav-link) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }

@@ -6,10 +6,12 @@ import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import { fileURLToPath } from 'node:url'
 import { modulesPlugin } from './vite/modules-plugin'
+import { shikiPlugin } from './vite/shiki-plugin'
 
 export default defineConfig({
   plugins: [
     modulesPlugin(),
+    shikiPlugin(),
     { enforce: 'pre', ...mdx({ remarkPlugins: [remarkGfm], rehypePlugins: [rehypeSlug] }) },
     react(),
     tailwind(),

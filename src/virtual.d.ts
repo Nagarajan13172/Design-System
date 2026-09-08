@@ -20,6 +20,7 @@ declare module 'virtual:module-loader' {
     items: Item[]
     sim: { run: (p?: Record<string, unknown>) => Timeline<unknown>; DEFAULTS: Record<string, unknown> }
     Body: ComponentType
+    renderSurface?: (props: Record<string, unknown>) => import('react').ReactNode
   }
   export const BUILT_IDS: string[]
   export function loadModule(id: string): Promise<LoadedModule>

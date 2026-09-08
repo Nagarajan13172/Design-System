@@ -24,3 +24,8 @@ pnpm-debug.log*
 # Test / tooling caches
 coverage/
 .vite/
+
+# Playwright
+test-results/
+playwright-report/
+.playwright/

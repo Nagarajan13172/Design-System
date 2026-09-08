@@ -14,7 +14,7 @@ const claims: Claim[] = [
     evidence: 'derivation',
     flipCondition: 'If the transport guaranteed in-order delivery per connection AND the server processed serially, arrival order would match dispatch order.',
     conceptTokens: [['order', 'sequence', 'ordering'], ['arrive', 'arrival', 'complete', 'completion'], ['dispatch', 'issue', 'sent', 'fired']],
-    probes: ['state-races-i1', 'state-races-i7', 'state-races-i12'],
+    probes: ['state-races-i1', 'state-races-i7', 'state-races-i14'],
   },
   {
     id: 'state-races-c2',

@@ -1,0 +1,78 @@
+A team ships a performance fix. The dashboard says the median dropped by 700
+milliseconds. Core Web Vitals do not move at all. Nobody has made a mistake, and
+nobody has been dishonest, and the score is right to ignore it.
+
+## One point versus a distribution
+
+A lab run — Lighthouse, WebPageTest, your laptop — measures one scripted load, on
+one device, over one network, with one cache state. That measurement is real. It is
+also a single point, and a single point cannot describe a population.
+
+The field is a population. The same page that loads in 900 milliseconds on the
+machine under your desk has a median of about 2.2 seconds across real sessions and a
+p95 past six. The lab number is not the middle of that distribution. It is near the
+bottom of it, because your laptop is near the top of the device range and your
+office network is near the top of the network range.
+
+That is the whole reason a 98 and a failing field score coexist so comfortably. They
+are not in conflict; they are answers to different questions.
+
+## p75, and why the median is a trap
+
+Core Web Vitals are graded at the **75th percentile** of real sessions. That choice
+is deliberate: it means a site is judged by an experience most of its users have or
+better, rather than by its best case.
+
+It also means the median is not the number you are being scored on, and improving
+the median is not the same as improving the score.
+
+Take a concrete fix: it saves 700ms, but only on sessions that were already under
+2.5 seconds — a lazy-loading change that helps when the connection is fast enough to
+have already fetched everything else, say. Run it over two thousand sessions and:
+
+- **57% of sessions get faster.** More than half your users genuinely benefit.
+- **Median: 2232ms → 1532ms.** A 700ms improvement.
+- **p75: 3416ms → 3416ms.** Zero. Not "a little" — none.
+- **p95: unchanged.**
+
+Every one of those numbers is true simultaneously. The fix worked, for the people it
+touched. It just never touched anyone at or above the 75th percentile, and that is
+the only region the score reads.
+
+The reverse also holds, and it is the useful half: a change that compresses the tail
+moves p75 even when the median does not budge at all. Removing a render-blocking
+request that only slow connections ever waited on will look like nothing in your own
+browser and move the score meaningfully.
+
+**So the question to ask about any performance change is not "how much faster" but
+"faster for whom, and were they already fast?"**
+
+## Two things about the tooling that catch people out
+
+**Lighthouse cannot measure INP.** Not "measures it approximately" — cannot, at all.
+INP is defined over the interactions a real user performs across a session, and a
+scripted load performs none. A Lighthouse report showing all green is silent about
+the vital most real applications actually fail. If you are reasoning about INP you
+need field data, and there is no lab substitute for it.
+
+**CrUX lags by weeks.** The Chrome UX Report grades on a rolling 28-day window, so a
+fix deployed yesterday is one day out of twenty-eight in the number you are looking
+at. Refreshing the dashboard the morning after a deploy shows you, overwhelmingly,
+the old build. Teams routinely conclude a fix "didn't work" from a number that could
+not possibly have moved yet.
+
+This is the strongest practical argument for collecting your own RUM even when CrUX
+is available: your own data has no window, so you can attribute a change to a deploy
+while the deploy is still fresh in everyone's mind.
+
+## What to say when you are asked
+
+Performance questions in interviews are diagnostic questions wearing a fix-list
+costume. Asked "LCP is 4.2 seconds, what do you do?", the weak answer lists
+remedies — compress images, lazy load, code split, add a CDN. The strong answer asks
+which part is large, and at which percentile, and from which data source.
+
+Then say the thing that ends the topic: that you steer on p75 field data rather than
+a lab score, that you check whether a proposed change reaches the sessions that are
+actually slow before spending a sprint on it, and that you do not read CrUX for a
+verdict on a deploy from this week.

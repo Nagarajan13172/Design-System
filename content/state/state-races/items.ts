@@ -1,4 +1,5 @@
 import type { Item } from '../../types'
+import { blocks, blanks, palette, changed } from './snippets/snippets.gen'
 
 /**
  * Item kinds are bound to the module's objective verb (`diagnose`), and only the
@@ -79,22 +80,32 @@ const items: Item[] = [
   {
     id: 'state-races-i4', kind: 'code-cloze', primaryClaim: 'state-races-c4',
     prompt: 'Complete the sequence guard so a superseded response can never render.',
-    payload: { blanks: [{ token: 'seq', occurrence: 2 }, { token: 'return' }], accept: { seq: ['seq', 'requestId', 'generation'], return: ['return'] } },
+    payload: {
+      // Tokenized and blank-resolved at build time by `pnpm build:code`.
+      stage: { blocks: blocks.filter(b => b.id === 'sequenced'), palette },
+      blanks: blanks.filter(b => ['b1', 'b2'].includes(b.id)),
+      accept: { b1: ['latest', 'current', 'newest'], b2: ['return'] },
+    },
   },
   {
     id: 'state-races-i10', kind: 'code-cloze', primaryClaim: 'state-races-c4',
-    prompt: 'Fill in the comparison that decides whether this response is still wanted.',
-    payload: { blanks: [{ token: 'latest' }], accept: { latest: ['latest', 'current', 'newest'] } },
+    prompt: 'Name the per-request token this guard captures, and the value it is later compared against.',
+    payload: {
+      stage: { blocks: blocks.filter(b => b.id === 'sequenced'), palette },
+      blanks: blanks.filter(b => ['b3', 'b4'].includes(b.id)),
+      accept: { b3: ['seq', 'requestid', 'generation'], b4: ['seq', 'requestid', 'generation'] },
+    },
   },
   {
-    id: 'state-races-i14', kind: 'code-diff', primaryClaim: 'state-races-c4', secondaryClaim: 'state-races-c5',
-    prompt: 'Version A cancels; version B sequences. Which one still renders stale results, and which one still sends the request?',
-    payload: { hunks: ['abort', 'seq-guard'], correctHunk: 1, defectClass: 'wasted-work-vs-wrong-render' },
-  },
-  {
-    id: 'state-races-i12', kind: 'code-diff', primaryClaim: 'state-races-c1',
-    prompt: 'Which of these two diffs actually changes what the user ends up seeing?',
-    payload: { hunks: ['reorder-await', 'seq-guard'], correctHunk: 1, defectClass: 'ordering' },
+    id: 'state-races-i14', kind: 'code-diff', primaryClaim: 'state-races-c4', secondaryClaim: 'state-races-c1',
+    prompt: 'Version A is the original; version B adds four lines. Which version can still render a stale result?',
+    payload: {
+      stage: { blocks, palette, changed: [{ blockId: 'naive', lines: changed.naive ?? [] }] },
+      hunks: ['version A — no guard', 'version B — sequence guard'],
+      classes: ['renders a superseded response', 'wastes bandwidth', 'a type error'],
+      correctHunk: 0,
+      defectClass: 'renders a superseded response',
+    },
   },
   // --- scheduler-only kinds (never move Mastery) ----------------------------
   {

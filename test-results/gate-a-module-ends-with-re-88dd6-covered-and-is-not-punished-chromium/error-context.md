@@ -105,7 +105,7 @@ Call log:
           - paragraph [ref=e68]: First, whether you distinguish arrival order from dispatch order at all, or whether you reach straight for a library. Second, whether you can name what the failure looks like to the user — no error, no log, silent wrongness — because that is what makes it dangerous and it is what separates someone who has debugged this from someone who has read about it. Third, whether you quantify. "I'd add a debounce" is a weak answer. "I'd sequence, because a debounce only narrows the window and the window is a ratio to the latency tail I don't control — on a slow network the same debounce is ten times worse" is the answer that ends the topic.
           - paragraph [ref=e69]: And when they push — and they will — the follow-up is almost always about cancellation. Have the distinction ready.
         - generic [ref=e70]:
-          - heading "drills · 1/6" [level=2] [ref=e71]
+          - heading "drills · 1/9" [level=2] [ref=e71]
           - generic [ref=e72]:
             - paragraph [ref=e73]: You raise the debounce from 300ms to 800ms. What happens to the stale-render rate, and at what threshold does the trade stop being worth it?
             - group "Which way does it move?" [ref=e74]:

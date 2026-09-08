@@ -6,6 +6,7 @@ echo "==> typecheck";     npx tsc --noEmit
 echo "==> lint";          npx eslint src content scripts eslint.config.js
 echo "==> lint:content";  npx tsx scripts/lint-content.ts
 echo "==> test";          npx vitest run
+echo "==> code";          npx tsx scripts/build-code.ts
 echo "==> build";         npx vite build
 echo "==> size";          npx size-limit
 echo "==> e2e";           npx playwright test

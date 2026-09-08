@@ -1,0 +1,83 @@
+"We moved to SSR for performance" is the most common sentence in this topic, and it
+is usually half wrong in a way that is worth being precise about.
+
+## SSR makes one metric worse
+
+Server rendering puts content in the HTML. That improves first paint and LCP, which
+is real and is usually the point.
+
+It also means the server must fetch data before it can send a single byte. Under CSR
+the server sends an empty shell immediately — there is nothing to wait for — so
+**TTFB is the best it will ever be under CSR, and SSR makes it worse.**
+
+That is not a bug or a misconfiguration. It is the trade: you are exchanging
+time-to-first-byte for time-to-first-content, and for most content-led pages that is
+an excellent exchange. But if someone says "SSR is faster" without naming which
+metric, they have not made the trade consciously, and the follow-up question will
+find that out.
+
+Streaming SSR is the strategy that refuses the trade: flush the shell immediately,
+then stream the slow parts in as their data resolves. TTFB goes back to CSR levels
+and content still arrives in the HTML. That is why streaming is the default answer
+now rather than plain SSR.
+
+## Hydration is the cost that does not move
+
+Here is the part that survives all of the above.
+
+Markup arriving early does not make a page interactive. The page is interactive when
+the client JavaScript has downloaded, parsed, executed and reattached every event
+handler to the server-rendered DOM. Until then the user is looking at something that
+appears finished and does not respond — which is arguably worse than a spinner,
+because it invites a click that goes nowhere.
+
+And **streaming does not shorten this.** It re-orders when things arrive. The same
+bundle still has to do the same work. Adding Suspense boundaries around slow sections
+genuinely improves what the user sees and genuinely does not improve when they can
+interact.
+
+This is why "just use Suspense" is not a performance answer and why time-to-
+interactive stubbornly refuses to improve across a whole category of migrations. The
+constraint is the quantity of client JavaScript, and every strategy discussed so far
+ships exactly the same amount of it.
+
+## Islands and RSC change the quantity
+
+Islands architecture and React Server Components are different in kind, not degree:
+most of the tree never becomes a client component at all, so there is simply less
+JavaScript to hydrate. The server component boundary is a graph cut over the import
+tree — everything reachable only from server components never enters the client
+bundle.
+
+That is the only row in the ledger that moves the interactive column, because it is
+the only one that reduces the work rather than rescheduling it.
+
+The flip condition matters as much as the claim, though: the benefit is proportional
+to how much of your tree is genuinely static. A dashboard of read-only panels gets an
+enormous win. A spreadsheet where every cell is interactive gets almost nothing,
+because almost everything ends up a client component anyway. Reach for RSC when there
+is static tree to leave behind.
+
+## The column nobody puts on the slide
+
+Every per-request strategy — SSR, streaming, islands with dynamic data — commits you
+to running a server, forever. Deploys, scaling, incident response, a runtime to keep
+patched, a bill. SSG and CSR do not: they are files on a CDN.
+
+That is not a metric, so it never appears in the comparison, and it is frequently the
+deciding constraint for a small team. A candidate who names it unprompted is telling
+the interviewer they have operated something, not just built it.
+
+## What to say when you are asked
+
+Open with the constraint, not the technology. What decides this page is the staleness
+budget, whether the content is personalised, which crawlers matter, and whether there
+is a team to operate a server.
+
+Then be precise about metrics: SSR trades TTFB for first content; streaming recovers
+the TTFB; neither touches interactivity, because that is bounded by client JavaScript;
+and RSC is the one that reduces the JavaScript rather than moving it.
+
+And when you name a choice, say what it costs. "Streaming SSR, and we accept running
+a server for it" is a stronger answer than "streaming SSR" — the cost you volunteer
+is the one the interviewer does not have to dig for.

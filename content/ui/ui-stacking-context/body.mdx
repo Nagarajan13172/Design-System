@@ -1,0 +1,84 @@
+Your modal has `z-index: 9999`. The sticky header has `z-index: 10`. The modal
+renders behind the header. Someone bumps it to `999999` and nothing changes.
+
+This is the most reliably confusing bug in CSS layout, and it is confusing for a
+precise reason: **the two numbers are never compared to each other.**
+
+## z-index is a local comparison
+
+A z-index does not place an element on a global stack. It orders an element among
+its *siblings inside one stacking context*. If two elements live in different
+contexts, their z-index values never meet — what gets compared instead is the
+position of their respective contexts.
+
+So the question is never "which number is bigger". It is "do these two elements
+share a stacking context, and if not, which contexts are actually competing?"
+
+In the failing case the modal is inside a card, the card creates a stacking context,
+and the modal's 9999 orders it against its siblings *inside that card*. What competes
+with the header is the card itself — and the card has no z-index at all, so it sits
+in document order and loses. The 9999 is not too small. It is answering a question
+nobody asked.
+
+## What creates a stacking context
+
+Most people know `z-index` on a positioned element does it. The list is longer, and
+the surprising members are the ones that bite:
+
+- `transform` — including `translateZ(0)` and `translate3d(0,0,0)`
+- `filter`, `backdrop-filter`
+- `opacity` less than 1
+- `will-change` naming any of the above
+- `isolation: isolate`
+- `contain: paint`, and being in the top layer
+
+Note what is *not* on the list: `position: relative` on its own. A positioned element
+with no z-index creates nothing, which is why the property feels safe until the day
+you add a z-index to it.
+
+The dangerous one is `transform`, because it arrives disguised as a performance hint.
+Somebody added `translateZ(0)` to a card two years ago to "force GPU acceleration" —
+a folk remedy that was already outdated when they wrote it — and that one line
+silently rewrote the paint order for every descendant the card will ever have.
+
+## One property, two consequences
+
+Here is the part that makes the bug genuinely hard: the same transform does a second,
+unrelated-looking thing.
+
+A transformed element becomes the **containing block for `position: fixed`
+descendants**. So the modal's `position: fixed; inset: 0` no longer resolves against
+the viewport — it resolves against the card. The backdrop that was supposed to dim
+the whole screen now dims a 320-pixel box in the middle of the page.
+
+Two symptoms, one cause, and they present so differently that teams routinely file
+them as separate tickets and fix neither. If you ever see a fixed overlay that is
+mysteriously the wrong size *and* mysteriously behind something, stop looking at the
+overlay and go find the transformed ancestor.
+
+## The fix, and the better fix
+
+The narrow fix is to remove the transform, or to give the card a z-index above the
+header — either restores the expected order.
+
+The real fix is to stop competing in the stacking tree at all. A native `<dialog>`
+opened with `showModal()`, or an element with the `popover` attribute, is promoted to
+the **top layer**: a separate layer that sits above the entire document and outside
+the stacking tree, where no ancestor can trap it and no z-index is needed. It also
+brings the backdrop pseudo-element, focus containment and Escape-to-close, which are
+three more things the div-based modal was going to reimplement badly.
+
+That is what ends the z-index arms race — not a bigger number, a different layer.
+
+## What to say when you are asked
+
+This comes up as a debugging question, and the interviewer is listening for whether
+you reason about mechanism or reach for a bigger number.
+
+Say that z-index is scoped to a stacking context, so the first move is to find the
+nearest ancestor that creates one and check what *it* competes with. Name transform,
+filter and opacity as the ones people do not expect. Then mention that a transformed
+ancestor also captures `position: fixed`, because connecting those two symptoms to a
+single cause is the part that signals you have actually debugged this rather than
+read about it. Finish on the top layer, which is the answer to "how would you build
+it so this cannot happen".

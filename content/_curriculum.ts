@@ -399,7 +399,7 @@ export const CURRICULUM: CurriculumEntry[] = [
   {
     id: 'perf-field-vs-lab', domain: 'perf', tier: 'MVP',
     title: 'Field, Lab, and the p75 You Actually Ship',
-    level: 'foundation', verb: 'judge', status: 'planned',
+    level: 'foundation', verb: 'judge', status: 'drafted',
     studyMinutes: 35, primitive: 'Plot2D',
     authorHours: { estimate: 10, actual: null },
     prereqs: [],
@@ -519,7 +519,7 @@ export const CURRICULUM: CurriculumEntry[] = [
   {
     id: 'arch-hydration', domain: 'arch', tier: 'MVP',
     title: 'Hydration: What It Costs and How It Breaks',
-    level: 'core', verb: 'diagnose', status: 'planned',
+    level: 'core', verb: 'diagnose', status: 'drafted',
     studyMinutes: 50, primitive: 'StateMatrix',
     authorHours: { estimate: 14, actual: null },
     prereqs: ['arch-streaming-suspense'],
@@ -819,8 +819,8 @@ export const CURRICULUM: CurriculumEntry[] = [
   {
     id: 'incl-a11y-tree', domain: 'incl', tier: 'MVP',
     title: 'The Accessibility Tree and Accessible Name Computation',
-    level: 'foundation', verb: 'explain', status: 'planned',
-    studyMinutes: 35, primitive: 'CodeStage',
+    level: 'foundation', verb: 'explain', status: 'drafted',
+    studyMinutes: 35, primitive: 'LiveSurface',
     authorHours: { estimate: 12, actual: null },
     prereqs: [],
     related: [],
@@ -1059,7 +1059,7 @@ export const CURRICULUM: CurriculumEntry[] = [
   {
     id: 'ui-stacking-context', domain: 'ui', tier: 'MVP',
     title: 'Stacking Contexts, Containing Blocks, and Why Your Overlay Is Clipped',
-    level: 'core', verb: 'diagnose', status: 'planned',
+    level: 'core', verb: 'diagnose', status: 'drafted',
     studyMinutes: 35, primitive: 'NodeGraph',
     authorHours: { estimate: 12, actual: null },
     prereqs: ['ui-layout-intrinsic'],

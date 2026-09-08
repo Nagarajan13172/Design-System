@@ -179,9 +179,13 @@ function Verdict({ result, onContinue, hint }: { result: Graded; onContinue: () 
   )
 }
 
+import { CodeCloze, CodeDiff } from './CodeDrill'
+
 export const DRILLS = {
   'constraint-flip': ConstraintFlip,
   'order-steps': OrderSteps,
   'spot-the-failure': SpotTheFailure,
+  'code-cloze': CodeCloze,
+  'code-diff': CodeDiff,
 } as const
 export type DrillKind = keyof typeof DRILLS

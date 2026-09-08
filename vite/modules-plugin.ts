@@ -37,6 +37,10 @@ export function modulesPlugin(): Plugin {
   const hasContent = (domain: string, id: string) =>
     existsSync(join(process.cwd(), 'content', domain, id, 'meta.ts'))
 
+  /** Only LiveSurface modules ship a viz.tsx — a sim may not import React. */
+  const hasViz = (domain: string, id: string) =>
+    existsSync(join(process.cwd(), 'content', domain, id, 'viz.tsx'))
+
   return {
     name: 'fesd:modules',
     enforce: 'pre',
@@ -80,9 +84,13 @@ export const DOMAIN_META = ${JSON.stringify(DOMAINS)}`
     import(${JSON.stringify(p + '/items')}),
     import(${JSON.stringify(p + '/sim')}),
     import(${JSON.stringify(p + '/body.mdx')}),
-  ]).then(([meta, claims, items, sim, body]) => ({
+    ${hasViz(m.domain, m.id) ? `import(${JSON.stringify(p + '/viz')})` : 'Promise.resolve({})'},
+  ]).then(([meta, claims, items, sim, body, viz]) => ({
     meta: meta.default, claims: claims.default, items: items.default,
     sim, Body: body.default,
+    // Only LiveSurface modules ship a viz.tsx: a sim may not import React
+    // (SIM CONTRACT), so the real-DOM render function lives beside it.
+    renderSurface: viz.renderSurface,
   }))`
         })
         return `export const LOADERS = {\n${entries.join(',\n')}\n}
