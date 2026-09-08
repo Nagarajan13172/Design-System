@@ -5,6 +5,7 @@ import { useTimelineHead } from './useTimelineHead'
 import { PredictionGate } from './PredictionGate'
 import { createMemoryStore, type PredictionStore, type PredictionRecord } from './predictionStore'
 import { gradeAttempt } from '@/domain/grading'
+import { ErrorBoundary } from './ErrorBoundary'
 
 /**
  * THE PLAYGROUND SHELL.
@@ -104,16 +105,20 @@ export function Playground({ meta, setup, run, renderSurface, gateItem, store, o
           </>
         ) : (
           <>
-            <Figure
-              primitive={meta.figure.primitive}
-              renderSurface={renderSurface}
-              state={shownState ?? null}
-              annotations={annotations}
-              ghost={timeline?.ghost?.frames.at(-1)?.state ?? null}
-              showGhost={showGhost}
-              composite={head.reduced}
-              labelledBy={`${meta.figure.id}-q`}
-            />
+            <ErrorBoundary label={meta.figure.id} kind="visual">
+              <div className="figure-scroll">
+              <Figure
+                primitive={meta.figure.primitive}
+                renderSurface={renderSurface}
+                state={shownState ?? null}
+                annotations={annotations}
+                ghost={timeline?.ghost?.frames.at(-1)?.state ?? null}
+                showGhost={showGhost}
+                composite={head.reduced}
+                labelledBy={`${meta.figure.id}-q`}
+              />
+              </div>
+            </ErrorBoundary>
 
             {/* Narration is a by-product of eager frames, and it is what a screen
                 reader gets instead of the SVG. */}

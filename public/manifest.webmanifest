@@ -1,0 +1,9 @@
+{
+  "name": "Frontend System Design",
+  "short_name": "fesd",
+  "start_url": "/review",
+  "display": "standalone",
+  "background_color": "#fcfcfd",
+  "theme_color": "#fcfcfd",
+  "description": "A visualized frontend system design curriculum with spaced review. Local-only: your progress never leaves this device."
+}

@@ -21,7 +21,7 @@ export default function MapLayer() {
   const vb = `${view.x} ${view.y} ${LAYOUT.width / view.k} ${LAYOUT.height / view.k}`
 
   return (
-    <div className="fixed inset-x-0 bottom-0 border-t" aria-hidden
+    <div className="map-layer fixed inset-x-0 bottom-0 border-t" aria-hidden
          style={{ top: 44, background: 'var(--bg)', zIndex: 5 }}>
       <div className="absolute right-3 top-3 flex gap-1 z-10">
         {([['−', 1 / 1.25], ['+', 1.25]] as const).map(([label, f]) => (

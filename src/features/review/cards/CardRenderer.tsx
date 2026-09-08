@@ -134,10 +134,13 @@ export function ClaimRecall({ item, claim, onGrade }: CardProps) {
           <blockquote className="p-3 rounded border mb-4" style={{ borderColor: 'var(--border)', background: 'var(--surface)', fontSize: '1rem', lineHeight: 1.7 }}>
             {claim.assertion}
           </blockquote>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            {/* 48px targets, labelled in words, and NO swipe-to-grade: an accidental
+                swipe writes a rating, and a rating corrupts a scheduler. */}
             {([['Again', 1], ['Hard', 2], ['Good', 3], ['Easy', 4]] as const).map(([label, r]) => (
               <button key={r} onClick={() => onGrade({ kind: 'self-rating', rating: r })}
-                      className="px-3 py-1.5 rounded border" style={{ borderColor: 'var(--border-strong)', background: 'var(--raised)' }}>
+                      className="flex-1 rounded border"
+                      style={{ minHeight: 48, minWidth: 72, borderColor: 'var(--border-strong)', background: 'var(--raised)' }}>
                 {label} <kbd className="font-mono text-[11px]" style={{ color: 'var(--text-faint)' }}>{r}</kbd>
               </button>
             ))}

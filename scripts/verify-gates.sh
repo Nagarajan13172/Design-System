@@ -11,10 +11,10 @@ BACKUP=$(mktemp -d)
 # This script edits the working tree to prove gates fire, so it must leave the tree
 # exactly as it found it. A previous version rm -rf'd a content directory it had not
 # backed up and deleted an authored module; this check makes that loud.
-CONTENT_BEFORE=$(find content -type f | sort | md5)
-trap 'AFTER=$(find content -type f | sort | md5); \
+CONTENT_BEFORE=$(find content src -type f | sort | xargs md5 2>/dev/null | md5)
+trap 'AFTER=$(find content src -type f | sort | xargs md5 2>/dev/null | md5); \
   if [ "$AFTER" != "$CONTENT_BEFORE" ]; then \
-    printf "\033[31mFATAL: verify-gates.sh changed content/ and did not restore it\033[0m\n"; exit 2; fi; \
+    printf "\033[31mFATAL: verify-gates.sh changed content/ or src/ and did not restore it\033[0m\n"; exit 2; fi; \
   rm -rf "$BACKUP"' EXIT
 
 restore() { for f in "$@"; do [ -f "$BACKUP/$(basename "$f")" ] && cp "$BACKUP/$(basename "$f")" "$f"; done; }
@@ -205,6 +205,26 @@ expect_red "a case study re-deriving a module's simulator" bash -c "
   perl -0pi -e \"s/export const measure = raceMeasure/export const measure = (p) => raceMeasure(p)/\" content/cs/cs-autocomplete/sim.ts
   npx vitest run content/cs >/dev/null 2>&1; rc=\$?
   cp $BACKUP/csa2.bak content/cs/cs-autocomplete/sim.ts; exit \$rc"
+
+echo
+echo "hardening"
+expect_red "a stale deploy white-screening instead of announcing" bash -c "
+  cp src/features/recovery/StaleBuildBar.tsx $BACKUP/sb.bak
+  perl -0pi -e \"s/if \\(!stale\\) return null/if (true) return null/\" src/features/recovery/StaleBuildBar.tsx
+  npx playwright test e2e/hardening.spec.ts >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/sb.bak src/features/recovery/StaleBuildBar.tsx; exit \$rc"
+
+expect_red "a reload loop with no guard" bash -c "
+  cp src/lib/buildId.ts $BACKUP/bi.bak
+  perl -0pi -e \"s/if \\(sessionStorage.getItem\\(RELOAD_GUARD\\)\\) return false/if (false) return false/\" src/lib/buildId.ts
+  npx vitest run src/lib >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/bi.bak src/lib/buildId.ts; exit \$rc"
+
+expect_red "settings dropping the local-only warning" bash -c "
+  cp src/routes/Settings.tsx $BACKUP/st.bak
+  perl -0pi -e \"s/in this browser and nowhere else/stored safely/\" src/routes/Settings.tsx
+  npx playwright test e2e/hardening.spec.ts >/dev/null 2>&1; rc=\$?
+  cp $BACKUP/st.bak src/routes/Settings.tsx; exit \$rc"
 
 echo
 echo "the mechanism"

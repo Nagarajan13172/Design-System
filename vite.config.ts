@@ -8,7 +8,12 @@ import { fileURLToPath } from 'node:url'
 import { modulesPlugin } from './vite/modules-plugin'
 import { shikiPlugin } from './vite/shiki-plugin'
 
+// The build id is baked into the bundle and also served as a no-store text file,
+// so an open tab can tell it is running an older deploy.
+const BUILD_ID = process.env.BUILD_ID ?? String(Date.now())
+
 export default defineConfig({
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   plugins: [
     modulesPlugin(),
     shikiPlugin(),

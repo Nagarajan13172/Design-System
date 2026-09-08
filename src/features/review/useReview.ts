@@ -3,6 +3,7 @@ import { loadModule, BUILT_IDS } from 'virtual:module-loader'
 import { MODULES } from 'virtual:manifest-lite'
 import type { Claim, Item, ItemId, ClaimId, ObjectiveVerb, Tier } from '@content/types'
 import { cards, reviews, attempts, sessions, prefs } from '@/data/repo'
+import { requestPersistence, storageHealth } from '@/data/repo/persist'
 import type { CardRow } from '@/data/repo/schema'
 import { createScheduler } from '@/domain/scheduler/adapter'
 import { buildQueue, queueSummary, DEFAULT_BUDGET_SECONDS, type QueueItem } from '@/domain/scheduler/queue'
@@ -153,6 +154,22 @@ export function useReview(now: () => number = Date.now) {
         budgetSeconds: session.budgetSeconds, graded: s.graded, correct: s.correct, wrongThenRight: s.wrongThenRight,
       })
       if (session.answered.filter(ratable).length > 0) await touchStreak(today())
+
+      // Persistence is requested AFTER a completed session, never on cold load.
+      // Browsers weigh engagement, so asking a visitor who has done nothing is the
+      // reliable way to get refused — and a refusal is remembered.
+      const asked = await prefs.get('persistAsked', false)
+      if (!asked) {
+        await prefs.set('persistAsked', true)
+        await prefs.set('persistGranted', await requestPersistence())
+      }
+      // Quota is checked once per session end, so pressure surfaces before it bites.
+      const health = await storageHealth()
+      if (health.pressure != null) await prefs.set('storagePressure', health.pressure)
+      // Fold attempts older than 90 days into summaries, but only under pressure:
+      // a learner with room keeps their full history.
+      const { rollupIfPressured } = await import('@/data/repo/rollup')
+      await rollupIfPressured(now())
     })()
   }, [ended]) // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -1,3 +1,5 @@
+declare const __BUILD_ID__: string
+
 /** Types for the virtual modules emitted by vite/modules-plugin.ts. */
 declare module 'virtual:manifest-lite' {
   import type { DomainKey, ContentStatus, Primitive, Level, Tier } from '@content/types'

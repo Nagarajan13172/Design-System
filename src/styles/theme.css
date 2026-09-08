@@ -129,3 +129,22 @@ dd a:not(.nav-link) {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/*
+ * THE MOBILE TIER.
+ *
+ * /review is phone-first because it is the commute use case and the thing that keeps
+ * a streak alive. Everything else degrades deliberately rather than pretending: a
+ * pan-zoom canvas and a dense request waterfall do not work at 390px, and shrinking
+ * them produces something unusable that reads as a bug.
+ */
+@media (max-width: 720px) {
+  /* Figures scroll inside their own container; the page body never scrolls sideways. */
+  .figure-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .figure-scroll > svg { min-width: 560px; }
+
+  /* The roadmap canvas is desktop-only — the list is the interface anyway. */
+  .map-layer { display: none !important; }
+
+  .prose-body { font-size: 1rem; }
+}

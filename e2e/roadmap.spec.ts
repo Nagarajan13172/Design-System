@@ -79,8 +79,10 @@ test.describe('the command palette', () => {
     await page.getByLabel('search').fill('ui-stacking')
     const rows = dialog.locator('ul li button')
     await expect(rows.first()).toContainText('ui-stacking-context')
-    await page.keyboard.press('Enter')
-    await expect(page).toHaveURL(/\/m\/ui-stacking-context/)
+    await page.getByLabel('search').press('Enter')
+    // A generous timeout on purpose: activating a hit loads that module's chunk, and
+    // under parallel workers that is genuinely slower than the 5s default.
+    await expect(page).toHaveURL(/\/m\/ui-stacking-context/, { timeout: 15_000 })
   })
 
   test('mode prefixes change what is searched, visibly', async ({ page }) => {

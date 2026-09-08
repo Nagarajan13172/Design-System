@@ -11,4 +11,5 @@ echo "==> layout";        npx tsx scripts/layout-roadmap.ts
 echo "==> build";         npx vite build
 echo "==> size";          npx size-limit
 echo "==> e2e";           npx playwright test
+echo "==> lighthouse";    npx lhci autorun
 echo "==> gates";         ./scripts/verify-gates.sh

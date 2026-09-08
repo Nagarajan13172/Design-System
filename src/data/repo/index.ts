@@ -168,6 +168,15 @@ export async function dumpAll(): Promise<Record<StoreName, unknown[]>> {
   return out
 }
 
+/** Used only by the rollup and by import recovery. */
+export async function resetStore(store: StoreName) {
+  return write(async db => {
+    const tx = db.transaction(store, 'readwrite')
+    await tx.store.clear()
+    await tx.done
+  })
+}
+
 export async function bulkPut(store: StoreName, rows: unknown[]) {
   return write(async db => {
     const tx = db.transaction(store, 'readwrite')

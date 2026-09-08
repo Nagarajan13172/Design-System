@@ -21,7 +21,8 @@
     "e2e": "playwright test",
     "gen:items": "tsx scripts/gen-items.ts",
     "build:code": "tsx scripts/build-code.ts",
-    "stats": "tsx scripts/module-stats.ts"
+    "stats": "tsx scripts/module-stats.ts",
+    "lh": "lhci autorun"
   },
   "dependencies": {
     "@mdx-js/react": "^3.1.1",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.39.5",
+    "@lhci/cli": "^0.15.1",
     "@mdx-js/rollup": "^3.1.1",
     "@playwright/test": "^1.63.0",
     "@size-limit/file": "^13.0.3",

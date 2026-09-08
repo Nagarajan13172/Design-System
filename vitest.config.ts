@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   plugins: [react()],
+  define: { __BUILD_ID__: JSON.stringify('test') },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

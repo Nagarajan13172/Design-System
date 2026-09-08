@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Frontend System Design</title>
+    <meta name="description" content="Learn frontend system design by predicting, then measuring. Local-only; nothing leaves your device." />
+    <meta name="color-scheme" content="light dark" />
+    <!-- A bare manifest, no service worker: an installed PWA gets durable storage on
+         iOS, and the SW update trap is a module in our own curriculum (ADR pending). -->
+    <link rel="manifest" href="/manifest.webmanifest" />
     <script>
       // Set before first paint so the theme never flashes. ADR-3: this is the one
       // and only key localStorage holds.

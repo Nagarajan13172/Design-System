@@ -125,6 +125,9 @@ Call log:
       - listitem:
         - paragraph: The same 300ms debounce leaves roughly 1% of sessions ending on stale data at p95 latency 480ms and roughly 13% at p95 1500ms, so a race bug that looks fixed on a fast network reappears an order of magnitude more often in the field.
         - paragraph: insufficient evidence — 0 items across 0 kinds, needs 3 across 2
+- status:
+  - text: A new version is available. Your progress is saved either way.
+  - button "Reload"
 ```
 
 # Test source
